@@ -1,77 +1,118 @@
-const Store = require("../../models/store.model.js");
-const Company = require("../../models/company.model.js");
-const { asyncHandler } = require("../utils/asyncHandler.js");
-const { ApiResponse } = require("../utils/apiResponse.js");
-const { ApiError } = require("../utils/apiError.js");
+const Store = require("../../models/store.model");
+const Company = require("../../models/company.model");
+const { successResponse, errorResponse } = require("../utils/responseHandler");
 
-// Create Store (ADMIN)
-const createStore = asyncHandler(async (req, res) => {
-  const { name, location, company, email, password, address, image } = req.body;
+// CREATE STORE
+const createStore = async (req, res) => {
+  try {
+    const { companyId, name, email, password, location, address } = req.body;
 
-  if (!name || !location || !company || !email || !password) {
-    throw new ApiError(400, "Required fields missing");
+    if (!companyId || !name || !email || !password) {
+      return errorResponse(res, 400, "Required fields missing", {
+        companyId: !companyId ? "Company ID required" : null,
+        name: !name ? "Store name required" : null,
+        email: !email ? "Email required" : null,
+        password: !password ? "Password required" : null,
+      });
+    }
+
+    const companyExists = await Company.findById(companyId);
+    if (!companyExists) return errorResponse(res, 404, "Company not found");
+
+    const exists = await Store.findOne({ email });
+    if (exists) return errorResponse(res, 409, "Store with email already exists");
+
+    const store = await Store.create({
+      companyId,
+      name,
+      email,
+      password,
+      location,
+      address,
+      createdBy: req.user._id,
+    });
+
+    const storeData = store.toObject();
+    delete storeData.password;
+
+    return successResponse(res, 201, "Store created successfully", storeData);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
   }
+};
 
-  // Check company exists
-  const existingCompany = await Company.findById(company);
-  if (!existingCompany) throw new ApiError(404, "Company not found");
+// GET STORES BY COMPANY
+const getStoresByCompany = async (req, res) => {
+  try {
+    const { companyId } = req.params;
 
-  const store = await Store.create({
-    name,
-    location,
-    company,
-    email,
-    password,
-    address,
-    image,
-  });
+    if (!companyId) return errorResponse(res, 400, "Company ID required");
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, store, "Store created successfully"));
-});
+    const stores = await Store.find({ companyId });
+    return successResponse(res, 200, "Stores fetched", stores);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
 
-// Get stores of a company
-const getStoresByCompany = asyncHandler(async (req, res) => {
-  const { companyId } = req.params;
-  const stores = await Store.find({ company: companyId }).select("-password");
-  return res.status(200).json(new ApiResponse(200, stores));
-});
+// GET STORE BY ID
+const getStoreById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return errorResponse(res, 400, "Store ID is required");
 
-// Get single store
-const getStoreById = asyncHandler(async (req, res) => {
-  const store = await Store.findById(req.params.id).select("-password");
-  if (!store) throw new ApiError(404, "Store not found");
-  return res.status(200).json(new ApiResponse(200, store));
-});
+    const store = await Store.findById(id);
+    if (!store) return errorResponse(res, 404, "Store not found");
 
-// Update store
-const updateStore = asyncHandler(async (req, res) => {
-  const updates = req.body;
-  const store = await Store.findByIdAndUpdate(req.params.id, updates, {
-    new: true,
-  }).select("-password");
+    return successResponse(res, 200, "Store details fetched", store);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
 
-  if (!store) throw new ApiError(404, "Store not found");
+// UPDATE STORE
+const updateStore = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, location } = req.body;
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, store, "Store updated successfully"));
-});
+    if (!id) return errorResponse(res, 400, "Store ID is required");
+    if (!name && !email && !location)
+      return errorResponse(res, 400, "Provide at least 1 field to update");
 
-// Delete store
-const deleteStore = asyncHandler(async (req, res) => {
-  const store = await Store.findByIdAndDelete(req.params.id);
-  if (!store) throw new ApiError(404, "Store not found");
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Store deleted successfully"));
-});
+    const updated = await Store.findByIdAndUpdate(
+      id,
+      { name, email, location },
+      { new: true }
+    );
+
+    if (!updated) return errorResponse(res, 404, "Store not found");
+
+    return successResponse(res, 200, "Store updated successfully", updated);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+
+// DELETE STORE
+const deleteStore = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return errorResponse(res, 400, "Store ID required");
+
+    const deleted = await Store.findByIdAndDelete(id);
+    if (!deleted) return errorResponse(res, 404, "Store not found");
+
+    return successResponse(res, 200, "Store deleted successfully");
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
 
 module.exports = {
   createStore,
   getStoresByCompany,
   getStoreById,
   updateStore,
-  deleteStore,
+  deleteStore
 };

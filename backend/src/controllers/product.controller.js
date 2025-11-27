@@ -1,66 +1,107 @@
 const Product = require("../../models/product.model.js");
 const { asyncHandler } = require("../utils/asyncHandler.js");
-const { ApiResponse } = require("../utils/apiResponse.js");
-const { ApiError } = require("../utils/apiError.js");
+const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
-// Create Product (ADMIN)
-const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, store } = req.body;
+// ================= CREATE PRODUCT (ADMIN) =================
+const createProduct = async (req, res) => {
+  try {
+    const { name, description, price, storeId, category, brand, qty, image } = req.body;
 
-  if (!name || !price || !store) {
-    throw new ApiError(400, "Name, Price and Store are required");
+    if (!name || !price || !storeId) {
+      return errorResponse(res, 400, "Name, Price & Store are required");
+    }
+
+    const product = await Product.create({
+      name,
+      description: description || "",
+      price,
+      storeId,
+      category: category || "",
+      brand: brand || "",
+      qty: qty || 0,
+      image: image || "",
+    });
+
+    return successResponse(res, 201, "Product created successfully", product);
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
   }
+};
 
-  const product = await Product.create({
-    name,
-    description,
-    price,
-    store,
-  });
 
-  return res.status(201).json(new ApiResponse(201, product, "Product created"));
-});
+// ================= GET ALL PRODUCTS =======================
+const getProducts = async (req, res) => {
+  try {
+    const products = await Product.find().populate("storeId", "name");
+    return successResponse(res, 200, "Products fetched successfully", products);
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
+  }
+};
 
-// Get All Products
-const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find().populate("store", "name");
+// ================= GET SINGLE PRODUCT =====================
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return errorResponse(res, 400, "Product ID is required");
 
-  return res.status(200).json(new ApiResponse(200, products));
-});
+    const product = await Product.findById(id).populate("storeId", "name");
+    if (!product) return errorResponse(res, 404, "Product not found");
 
-// Get Single Product
-const getProductById = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id).populate(
-    "store",
-    "name"
-  );
+    return successResponse(res, 200, "Product fetched successfully", product);
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
+  }
+};
 
-  if (!product) throw new ApiError(404, "Product not found");
+// ================= GET PRODUCTS BY STORE =================
+const getProductsByStore = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    if (!storeId) return errorResponse(res, 400, "Store ID is required");
 
-  return res.status(200).json(new ApiResponse(200, product));
-});
+    const products = await Product.find({ storeId }).populate("storeId", "name");
 
-// Update Product (ADMIN)
-const updateProduct = asyncHandler(async (req, res) => {
-  const updates = req.body;
+    return successResponse(res, 200, "Products fetched successfully", products);
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
+  }
+};
 
-  const product = await Product.findByIdAndUpdate(req.params.id, updates, {
-    new: true,
-  });
+// ================= UPDATE PRODUCT (ADMIN) ==================
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
 
-  if (!product) throw new ApiError(404, "Product not found");
+    if (!id) return errorResponse(res, 400, "Product ID is required");
+    if (!updates || Object.keys(updates).length === 0)
+      return errorResponse(res, 400, "No fields provided to update");
 
-  return res.status(200).json(new ApiResponse(200, product, "Product updated"));
-});
+    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
+    if (!product) return errorResponse(res, 404, "Product not found");
 
-// Delete Product (ADMIN)
-const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findByIdAndDelete(req.params.id);
+    return successResponse(res, 200, "Product updated successfully", product);
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
+  }
+};
 
-  if (!product) throw new ApiError(404, "Product not found");
+// ================= DELETE PRODUCT (ADMIN) ==================
+const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return errorResponse(res, 400, "Product ID is required");
 
-  return res.status(200).json(new ApiResponse(200, {}, "Product deleted"));
-});
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) return errorResponse(res, 404, "Product not found");
+
+    return successResponse(res, 200, "Product deleted successfully", {});
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
+  }
+};
+
 
 module.exports = {
   createProduct,
@@ -68,4 +109,5 @@ module.exports = {
   getProductById,
   updateProduct,
   deleteProduct,
+  getProductsByStore
 };

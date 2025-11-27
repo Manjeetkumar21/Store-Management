@@ -5,6 +5,7 @@ const {
   getProductById,
   updateProduct,
   deleteProduct,
+  getProductsByStore
 } = require("../controllers/product.controller.js");
 
 const { auth } = require("../middlewares/auth.middleware.js");
@@ -20,5 +21,7 @@ router.get("/:id", getProductById);
 router.post("/", auth, authorizeRoles("admin"), createProduct);
 router.put("/:id", auth, authorizeRoles("admin"), updateProduct);
 router.delete("/:id", auth, authorizeRoles("admin"), deleteProduct);
+router.get("/store/:storeId", auth, authorizeRoles("store"), getProductsByStore);
+
 
 module.exports = router;

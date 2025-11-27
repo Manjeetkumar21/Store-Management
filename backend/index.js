@@ -4,7 +4,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db.js");
 const authRoutes = require("./src/routes/auth.routes.js");
-// const companyRoutes = require("./src/routes/company.route.js");
+const companyRoutes = require("./src/routes/company.routes.js");
 const storeRoutes = require("./src/routes/store.routes.js");
 const productRoutes = require("./src/routes/product.routes.js");
 const cartRoutes = require("./src/routes/cart.routes.js");
@@ -32,7 +32,7 @@ app.get("/health", (req, res) => {
 
 
 app.use("/api/auth", authRoutes);
-// app.use("/api/company", companyRoutes);
+app.use("/api/company", companyRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);

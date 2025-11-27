@@ -1,91 +1,137 @@
 const Order = require("../../models/order.model.js");
 const Cart = require("../../models/cart.model.js");
 const Product = require("../../models/product.model.js");
-const { asyncHandler } = require("../utils/asyncHandler.js");
-const { ApiError } = require("../utils/apiError.js");
-const { ApiResponse } = require("../utils/apiResponse.js");
+const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
-// Create order from cart (store user)
-const createOrderFromCart = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const storeId = req.user.storeId;
 
-  const cart = await Cart.findOne({ userId, storeId });
-  if (!cart || cart.items.length === 0)
-    throw new ApiError(400, "Cart is empty");
+// ================= CREATE ORDER FROM CART =================
+const createOrderFromCart = async (req, res) => {
+  try {
+    if (req.role !== "store") 
+      return errorResponse(res, 403, "Only store user can create order");
 
-  // Validate prices & availability
-  let total = 0;
-  const products = [];
-  for (const item of cart.items) {
-    const prod = await Product.findById(item.productId);
-    if (!prod) throw new ApiError(404, `Product ${item.productId} not found`);
-    if (!prod.storeId.equals(storeId))
-      throw new ApiError(403, "Product belongs to different store");
+    const userId = req.user._id;
+    const storeId = req.user.storeId;
 
-    // optional: check stock qty
-    if (prod.qty < item.qty)
-      throw new ApiError(400, `Insufficient stock for ${prod.name}`);
+    const cart = await Cart.findOne({ userId, storeId });
+    if (!cart || cart.items.length === 0)
+      return errorResponse(res, 400, "Cart is empty");
 
-    products.push({ productId: prod._id, qty: item.qty, price: prod.price });
-    total += prod.price * item.qty;
-  }
+    let totalAmount = 0;
+    const products = [];
 
-  const order = await Order.create({ storeId, products, totalAmount: total });
+    for (const item of cart.items) {
+      const prod = await Product.findById(item.productId);
 
-  // optionally decrement product qty in a transaction (left simple here)
-  for (const item of products) {
-    await Product.findByIdAndUpdate(item.productId, {
-      $inc: { qty: -item.qty },
+      if (!prod)
+        return errorResponse(res, 404, `Product not found: ${item.productId}`);
+
+      if (!prod.storeId.equals(storeId))
+        return errorResponse(res, 403, "Product belongs to another store");
+
+      if (prod.qty < item.qty)
+        return errorResponse(res, 400, `Insufficient stock: ${prod.name}`);
+
+      products.push({ productId: prod._id, qty: item.qty, price: prod.price });
+      totalAmount += prod.price * item.qty;
+    }
+
+    const order = await Order.create({
+      userId,
+      storeId,
+      products,
+      totalAmount,
+      status: "pending"
     });
+
+    for (const p of products) {
+      await Product.findByIdAndUpdate(p.productId, { $inc: { qty: -p.qty } });
+    }
+
+    await Cart.findOneAndDelete({ userId, storeId });
+
+    return successResponse(res, 201, "Order created successfully", order);
+
+  } catch (error) {
+    console.error("[CREATE ORDER ERROR]:", error);
+    return errorResponse(res, 500, "Internal server error");
   }
+};
 
-  // clear cart
-  await Cart.findOneAndDelete({ userId, storeId });
 
-  return res.status(201).json(new ApiResponse(201, order, "Order created"));
-});
 
-// Get orders for logged-in store user (their store)
-const getStoreOrders = asyncHandler(async (req, res) => {
-  const storeId = req.user.storeId;
-  const orders = await Order.find({ storeId })
-    .sort({ createdAt: -1 })
-    .populate("products.productId");
-  return res.status(200).json(new ApiResponse(200, orders));
-});
+// ================= STORE ORDERS ===========================
+const getStoreOrders = async (req, res) => {
+  try {
+    if (req.role !== "store") 
+      return errorResponse(res, 403, "Only store users can view store orders");
 
-// Admin: get all orders (with optional filters)
-const getAllOrders = asyncHandler(async (req, res) => {
-  const { status, storeId } = req.query;
-  const filter = {};
-  if (status) filter.status = status;
-  if (storeId) filter.storeId = storeId;
+    const storeId = req.user.storeId;
 
-  const orders = await Order.find(filter)
-    .sort({ createdAt: -1 })
-    .populate("products.productId");
-  return res.status(200).json(new ApiResponse(200, orders));
-});
+    const orders = await Order.find({ storeId })
+      .sort({ createdAt: -1 })
+      .populate("products.productId");
 
-// Update order status (admin)
-const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  if (
-    !["pending", "confirmed", "shipped", "delivered", "cancelled"].includes(
-      status
-    )
-  )
-    throw new ApiError(400, "Invalid status");
+    return successResponse(res, 200, "Orders fetched successfully", orders);
 
-  const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
-  if (!order) throw new ApiError(404, "Order not found");
+  } catch (error) {
+    console.error("[FETCH STORE ORDERS ERROR]:", error);
+    return errorResponse(res, 500, "Internal server error");
+  }
+};
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, order, "Order status updated"));
-});
+
+
+// ================= ADMIN: GET ALL ORDERS ===================
+const getAllOrders = async (req, res) => {
+  try {
+    if (req.role !== "admin") 
+      return errorResponse(res, 403, "Only admin can view all orders");
+
+    const { status, storeId } = req.query;
+    const filter = {};
+
+    if (status) filter.status = status;
+    if (storeId) filter.storeId = storeId;
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("products.productId storeId");
+
+    return successResponse(res, 200, "All orders fetched successfully", orders);
+
+  } catch (error) {
+    console.error("[ADMIN GET ORDERS ERROR]:", error);
+    return errorResponse(res, 500, "Internal server error");
+  }
+};
+
+
+
+// ================= UPDATE ORDER STATUS =====================
+const updateOrderStatus = async (req, res) => {
+  try {
+    if (req.role !== "store" && req.role !== "admin")
+      return errorResponse(res, 403, "Not authorized to update status");
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatus = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+    if (!validStatus.includes(status))
+      return errorResponse(res, 400, "Invalid order status");
+
+    const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
+    if (!order) return errorResponse(res, 404, "Order not found");
+
+    return successResponse(res, 200, "Order status updated successfully", order);
+
+  } catch (error) {
+    console.error("[UPDATE ORDER STATUS ERROR]:", error);
+    return errorResponse(res, 500, "Internal server error");
+  }
+};
+
 
 module.exports = {
   createOrderFromCart,

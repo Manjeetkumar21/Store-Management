@@ -1,22 +1,35 @@
 const User = require("../models/user.model.js");
-const { asyncHandler } = require("../utils/asyncHandler.js");
-const { ApiResponse } = require("../utils/apiResponse.js");
+const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
-const getMyProfile = asyncHandler(async (req, res) => {
-  return res.status(200).json(new ApiResponse(200, req.user));
-});
+// ================= GET MY PROFILE =================
+const getMyProfile = async (req, res) => {
+  try {
+    if (!req.user) {
+      return errorResponse(res, 401, "Unauthorized user");
+    }
 
-const updateMyProfile = asyncHandler(async (req, res) => {
-  const { name } = req.body;
+    return successResponse(res, 200, "Profile fetched", req.user);
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
+  }
+};
 
-  if (!name) throw new ApiError(400, "Name is required");
+// ================= UPDATE MY PROFILE =================
+const updateMyProfile = async (req, res) => {
+  try {
+    const { name } = req.body;
 
-  req.user.name = name;
-  await req.user.save();
+    if (!name) {
+      return errorResponse(res, 400, "Name is required");
+    }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, req.user, "Profile updated"));
-});
+    req.user.name = name;
+    await req.user.save();
+
+    return successResponse(res, 200, "Profile updated", req.user);
+  } catch (error) {
+    return errorResponse(res, 500, "Server error", error.message);
+  }
+};
 
 module.exports = { getMyProfile, updateMyProfile };
