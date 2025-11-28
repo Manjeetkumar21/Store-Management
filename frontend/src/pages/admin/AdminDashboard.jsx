@@ -28,7 +28,7 @@ export const AdminDashboard = () => {
     try {
       const response = await axiosInstance.get("/stats/admin/stats")
      
-      const incomingStats = response.data.stats || response.data 
+      const incomingStats = response.data.data || response.data 
       
       if (incomingStats && typeof incomingStats.totalCompanies === 'number') {
         setStats({
@@ -36,7 +36,6 @@ export const AdminDashboard = () => {
           revenue: incomingStats.revenue || 0,
           recentOrders: incomingStats.recentOrders || [],
         })
-        toast.success("Dashboard stats loaded successfully!")
       }
     } catch (err) {
       console.error("Failed to load dashboard stats:", err)

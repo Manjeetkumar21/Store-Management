@@ -9,7 +9,16 @@ const companySchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-}, { timestamps: true });
+}, 
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
+
+companySchema.virtual("stores", {
+  ref: "Store",
+  localField: "_id",
+  foreignField: "companyId",
+});
+
 
 const Company = mongoose.model("Company", companySchema);
 

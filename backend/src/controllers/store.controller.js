@@ -41,6 +41,21 @@ const createStore = async (req, res) => {
   }
 };
 
+//GET ALL STORES
+const getAllStores = async (req, res) => {
+  try {
+    const stores = await Store.find()
+      .select("-password")
+      .populate("companyId", "name description createdBy")
+      .populate("products", "name price qty brand image category description");
+
+    return successResponse(res, 200, "Stores with company & products fetched", stores);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+
+
 // GET STORES BY COMPANY
 const getStoresByCompany = async (req, res) => {
   try {
@@ -111,6 +126,7 @@ const deleteStore = async (req, res) => {
 
 module.exports = {
   createStore,
+  getAllStores,
   getStoresByCompany,
   getStoreById,
   updateStore,

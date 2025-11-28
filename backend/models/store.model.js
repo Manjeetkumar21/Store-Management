@@ -17,15 +17,27 @@ const storeSchema = new mongoose.Schema(
     phone: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },   // required
+    toObject: { virtuals: true }  // required
+  }
 );
 
+// virtual → get all products of store
+storeSchema.virtual("products", {
+  ref: "Product",
+  localField: "_id",
+  foreignField: "storeId"
+});
+
+// index for perf.
 storeSchema.index({ companyId: 1, location: 1 });
 
+// hash password
 storeSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, await bcrypt.genSalt(10));
 });
 
 module.exports = mongoose.model("Store", storeSchema);

@@ -34,8 +34,15 @@ const createCompany = async (req, res) => {
 // Get All Companies
 const getAllCompanies = async (req, res) => {
   try {
-    const companies = await Company.find();
+    const companies = await Company.find()
+      .populate({
+        path: "stores",
+        select: "-password",
+      })
+      .lean();
+
     return successResponse(res, 200, "Companies fetched successfully", companies);
+
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
