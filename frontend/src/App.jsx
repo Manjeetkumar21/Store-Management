@@ -17,6 +17,7 @@ import { StoreProducts } from "./pages/store/Products"
 import { Cart } from "./pages/store/Cart"
 import { Checkout } from "./pages/store/Checkout"
 import { Orders } from "./pages/store/Orders"
+import { OrderDetails } from "./pages/store/OrderDetails"
 import { AddressManagement } from "./pages/store/AddressManagement"
 import { PaymentQR } from "./pages/store/PaymentQR"
 
@@ -115,6 +116,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="store">
               <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/store/orders/:orderId"
+          element={
+            <ProtectedRoute requiredRole="store">
+              <OrderDetails />
             </ProtectedRoute>
           }
         />
