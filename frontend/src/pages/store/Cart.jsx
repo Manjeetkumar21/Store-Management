@@ -5,6 +5,8 @@ import { MainLayout } from "@/components/layout/MainLayout"
 import { Button } from "@/components/ui/Button"
 import axiosInstance from "@/api/axiosInstance"
 import { useEffect, useState } from "react"
+import { useAppDispatch } from "@/redux/hooks"
+import { setCart } from "@/redux/slices/cartSlice"
 
 // Define the shape of a transformed cart item for local state
 // This simplifies the structure pulled from the nested API response.
@@ -21,11 +23,12 @@ const transformItem = (item) => ({
 
 export const Cart = () => {
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   // --- Utility Calculations ---
-  
+
   // Calculate totals from the current local state 'items'
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0)
   const taxRate = 0.1 // 10% tax
@@ -39,11 +42,12 @@ export const Cart = () => {
     try {
       const response = await axiosInstance.get(`/cart`)
       const cartItemsFromAPI = response.data.cart.items
-      
+
       // Transform the nested API data into a flat, usable array
       const transformedItems = cartItemsFromAPI.map(transformItem)
-      
+
       setItems(transformedItems)
+      dispatch(setCart(transformedItems))
     } catch (err) {
       toast.error("Failed to fetch cart details.")
       setItems([])
@@ -54,27 +58,27 @@ export const Cart = () => {
 
   const handleUpdateQuantity = async (productId, currentQuantity, change) => {
     const newQuantity = currentQuantity + change
-    
+
     if (newQuantity < 1) {
       handleRemoveItem(productId)
       return
     }
 
     // Optimistic Update: Update the local state immediately for a smooth experience
-    setItems(prevItems => prevItems.map(item => 
-        item.productId === productId ? { ...item, quantity: newQuantity } : item
+    setItems(prevItems => prevItems.map(item =>
+      item.productId === productId ? { ...item, quantity: newQuantity } : item
     ))
 
     try {
-      await axiosInstance.put(`/cart`, { 
-        productId, 
-        qty: newQuantity 
+      await axiosInstance.put(`/cart`, {
+        productId,
+        qty: newQuantity
       })
       toast.success("Cart quantity updated.")
     } catch (err) {
       toast.error("Failed to update cart. Reverting changes.")
       // Revert state on failure by re-fetching the server's true state
-      fetchCart() 
+      fetchCart()
     }
   }
 
@@ -87,7 +91,7 @@ export const Cart = () => {
       toast.success("Item removed from cart.")
     } catch (err) {
       toast.error("Failed to remove item. Restoring cart.")
-      fetchCart() 
+      fetchCart()
     }
   }
 
@@ -102,10 +106,10 @@ export const Cart = () => {
   // --- Lifecycle Hook ---
   useEffect(() => {
     fetchCart()
-  }, []) 
+  }, [])
 
   // --- Render Logic ---
-  
+
   // 1. Loading State
   if (isLoading) {
     return (
@@ -121,7 +125,7 @@ export const Cart = () => {
   return (
     <MainLayout>
       <div className="space-y-10">
-        
+
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -134,9 +138,9 @@ export const Cart = () => {
         {items.length === 0 ? (
           <div className="text-center py-20 bg-white shadow-lg rounded-xl border-4 border-dashed border-gray-200">
             <p className="text-gray-500 text-xl font-medium mb-4">Your cart is currently empty.</p>
-            <Button 
-              variant="primary" 
-              onClick={() => navigate("/store/products")} 
+            <Button
+              variant="primary"
+              onClick={() => navigate("/store/products")}
               className="mt-4 text-lg px-8 py-3"
             >
               Start Shopping Now
@@ -145,11 +149,11 @@ export const Cart = () => {
         ) : (
           /* 3. Cart with Items Grid */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* --- Cart Items List (Column 1) --- */}
             <div className="lg:col-span-2 space-y-4">
               <h2 className="text-2xl font-bold text-gray-800">Review Items ({items.length})</h2>
-              
+
               {items.map((item) => (
                 <div
                   key={item.productId}
@@ -208,7 +212,7 @@ export const Cart = () => {
             {/* --- Order Summary (Column 2) --- */}
             <div className="bg-white shadow-xl rounded-xl p-8 h-fit sticky top-24 border border-blue-100">
               <h2 className="text-2xl font-bold text-gray-900 mb-5 border-b pb-3">Order Summary</h2>
-              
+
               <div className="space-y-4 mb-6">
                 <div className="flex items-center justify-between text-lg text-gray-600">
                   <span>Subtotal</span>
@@ -229,18 +233,18 @@ export const Cart = () => {
                 <span className="font-bold text-xl text-gray-900">Order Total</span>
                 <span className="text-xl font-bold text-blue-600">${total.toFixed(2)}</span>
               </div>
-              
+
               {/* Checkout Buttons */}
-              <Button 
-                variant="primary" 
-                className="w-full mt-8 mb-3 text-lg py-3" 
+              <Button
+                variant="primary"
+                className="w-full mt-8 mb-3 text-lg py-3"
                 onClick={handleCheckout}
               >
                 Proceed to Checkout
               </Button>
-              <Button 
-                variant="secondary" 
-                className="w-full text-lg py-3" 
+              <Button
+                variant="secondary"
+                className="w-full text-lg py-3"
                 onClick={() => navigate("/store/products")}
               >
                 Continue Shopping

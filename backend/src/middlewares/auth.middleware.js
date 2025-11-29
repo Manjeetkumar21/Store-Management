@@ -20,8 +20,6 @@ const auth = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Invalid Token");
   }
 
-  console.log("decode : ", decoded)
-
   if (!decoded || !decoded.role) {
     throw new ApiError(401, "Invalid Token Payload");
   }

@@ -7,7 +7,7 @@ import { MainLayout } from "@/components/layout/MainLayout"
 import { Button } from "@/components/ui/button"
 import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
-import { addToCart as addCartRedux } from "@/redux/slices/cartSlice"
+import { setCart } from "@/redux/slices/cartSlice"
 import { useNavigate } from "react-router-dom"
 
 // Product Card Component
@@ -157,7 +157,16 @@ export const StoreProducts = () => {
         productId: product._id,
         qty: qty,
       })
-      dispatch(addCartRedux(res.data.cart))
+      const cartItems = res.data.cart.items.map(item => ({
+        productId: item.productId._id,
+        title: item.productId.name,
+        brand: item.productId.brand,
+        category: item.productId.category,
+        price: item.price,
+        quantity: item.qty,
+        image: item.productId.image
+      }))
+      dispatch(setCart(cartItems))
       toast.success("Product added to cart")
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add")
