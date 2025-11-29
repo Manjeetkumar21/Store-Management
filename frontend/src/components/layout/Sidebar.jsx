@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Building2, Store, Package, LogOut } from "lucide-react"
+import { BarChart3, Building2, Store, Package, LogOut, MapPin } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { logout } from "@/redux/slices/authSlice"
 import { cn } from "@/lib/utils"
@@ -17,6 +17,7 @@ export const Sidebar = () => {
     { name: "Companies", href: "/admin/companies", icon: <Building2 size={20} /> },
     { name: "Stores", href: "/admin/stores", icon: <Store size={20} /> },
     { name: "Products", href: "/admin/products", icon: <Package size={20} /> },
+    { name: "Orders", href: "/admin/orders", icon: <Building2 size={20} /> },
   ]
 
   const storeNavItems = [
@@ -24,6 +25,7 @@ export const Sidebar = () => {
     { name: "Products", href: "/store/products", icon: <Package size={20} /> },
     { name: "Cart", href: "/store/cart", icon: <Store size={20} /> },
     { name: "Orders", href: "/store/orders", icon: <Building2 size={20} /> },
+    { name: "Addresses", href: "/store/addresses", icon: <MapPin size={20} /> },
   ]
 
   const navItems = user?.role === "admin" ? adminNavItems : storeNavItems

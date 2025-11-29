@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { ChevronLeft, CheckCircle } from "lucide-react"
+import { ChevronLeft, Plus } from "lucide-react"
 import toast from "react-hot-toast"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
+import { AddressCard } from "@/components/AddressCard"
 import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { clearCart } from "@/redux/slices/cartSlice"
@@ -13,34 +14,93 @@ export const Checkout = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { items } = useAppSelector((state) => state.cart)
-  const { user } = useAppSelector((state) => state.auth)
 
-  const [step, setStep] = useState<"shipping" | "payment" | "confirmation">("shipping")
+  const [step, setStep] = useState("address")
   const [loading, setLoading] = useState(false)
-  const [shippingData, setShippingData] = useState({
+  const [addresses, setAddresses] = useState([])
+  const [selectedAddress, setSelectedAddress] = useState(null)
+  const [showAddressForm, setShowAddressForm] = useState(false)
+  const [addressFormData, setAddressFormData] = useState({
     fullName: "",
-    email: "",
     phone: "",
-    address: "",
+    addressLine1: "",
+    addressLine2: "",
     city: "",
+    state: "",
     zipCode: "",
+    country: "India",
   })
 
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0)
-  const tax = subtotal * 0.1
-  const shipping = 10
-  const total = subtotal + tax + shipping
 
-  const handleShippingSubmit = (e) => {
+  useEffect(() => {
+    fetchAddresses()
+  }, [])
+
+  const fetchAddresses = async () => {
+    try {
+      const response = await axiosInstance.get("/address")
+      const addressList = response.data.data
+      setAddresses(addressList)
+
+      // Auto-select default address
+      const defaultAddr = addressList.find(addr => addr.isDefault)
+      if (defaultAddr) {
+        setSelectedAddress(defaultAddr)
+      }
+    } catch (error) {
+      toast.error("Failed to fetch addresses")
+    }
+  }
+
+  const handleAddressSubmit = async (e) => {
     e.preventDefault()
-    if (!shippingData.fullName || !shippingData.email || !shippingData.address || !shippingData.city) {
-      toast.error("Please fill all shipping details")
+
+    if (!addressFormData.fullName || !addressFormData.phone || !addressFormData.addressLine1 ||
+      !addressFormData.city || !addressFormData.state || !addressFormData.zipCode) {
+      toast.error("Please fill all required fields")
       return
     }
-    setStep("payment")
+
+    try {
+      const response = await axiosInstance.post("/address", addressFormData)
+      toast.success("Address added successfully")
+      setAddresses([...addresses, response.data.data])
+      setSelectedAddress(response.data.data)
+      setShowAddressForm(false)
+      resetAddressForm()
+    } catch (error) {
+      toast.error("Failed to add address")
+    }
+  }
+
+  const resetAddressForm = () => {
+    setAddressFormData({
+      fullName: "",
+      phone: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "India",
+    })
+  }
+
+  const handleContinueToPayment = () => {
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address")
+      return
+    }
+    setStep("review")
   }
 
   const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address")
+      return
+    }
+
     if (items.length === 0) {
       toast.error("Your cart is empty")
       return
@@ -48,28 +108,13 @@ export const Checkout = () => {
 
     setLoading(true)
     try {
-      const orderData = {
-        items: items.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        shippingAddress: shippingData,
-        total,
-        subtotal,
-        tax,
-        shipping,
-      }
-
-      await axiosInstance.post("/order/create", orderData)
+      const response = await axiosInstance.post("/order", {
+        addressId: selectedAddress._id,
+      })
 
       dispatch(clearCart())
-      setStep("confirmation")
       toast.success("Order placed successfully!")
-
-      setTimeout(() => {
-        navigate("/store/orders")
-      }, 2000)
+      navigate(`/store/orders`)
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to place order")
     } finally {
@@ -77,27 +122,9 @@ export const Checkout = () => {
     }
   }
 
-  if (step === "confirmation") {
-    return (
-      <MainLayout>
-        <div className="max-w-2xl mx-auto py-12">
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <CheckCircle className="mx-auto text-green-600 mb-4" size={64} />
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
-            <p className="text-gray-600 mb-6">Thank you for your purchase. Your order has been placed successfully.</p>
-            <p className="text-2xl font-bold text-blue-600 mb-8">Total: ${total.toFixed(2)}</p>
-            <Button variant="primary" onClick={() => navigate("/store/orders")} className="w-full">
-              View My Orders
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    )
-  }
-
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <button
           onClick={() => navigate("/store/cart")}
           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
@@ -109,101 +136,158 @@ export const Checkout = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg border border-gray-200 p-6">
+              {/* Progress Steps */}
               <div className="flex items-center gap-4 mb-8">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${step === "shipping" ? "bg-blue-600" : "bg-green-600"}`}
-                >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${step === "address" ? "bg-blue-600" : "bg-green-600"
+                  }`}>
                   1
                 </div>
-                <div className={`flex-1 h-1 ${step !== "shipping" ? "bg-blue-600" : "bg-gray-300"}`} />
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${step === "payment" ? "bg-blue-600" : step === "confirmation" ? "bg-green-600" : "bg-gray-300"}`}
-                >
+                <div className={`flex-1 h-1 ${step !== "address" ? "bg-blue-600" : "bg-gray-300"}`} />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${step === "review" ? "bg-blue-600" : "bg-gray-300"
+                  }`}>
                   2
                 </div>
               </div>
 
-              {step === "shipping" && (
+              {/* Address Selection Step */}
+              {step === "address" && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Shipping Information</h2>
-                  <form onSubmit={handleShippingSubmit} className="space-y-4">
-                    <Input
-                      label="Full Name"
-                      placeholder="John Doe"
-                      value={shippingData.fullName}
-                      onChange={(e) => setShippingData({ ...shippingData, fullName: e.target.value })}
-                    />
-                    <Input
-                      label="Email"
-                      type="email"
-                      placeholder="john@example.com"
-                      value={shippingData.email}
-                      onChange={(e) => setShippingData({ ...shippingData, email: e.target.value })}
-                    />
-                    <Input
-                      label="Phone Number"
-                      placeholder="+1 (555) 123-4567"
-                      value={shippingData.phone}
-                      onChange={(e) => setShippingData({ ...shippingData, phone: e.target.value })}
-                    />
-                    <Input
-                      label="Address"
-                      placeholder="123 Main Street"
-                      value={shippingData.address}
-                      onChange={(e) => setShippingData({ ...shippingData, address: e.target.value })}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        label="City"
-                        placeholder="New York"
-                        value={shippingData.city}
-                        onChange={(e) => setShippingData({ ...shippingData, city: e.target.value })}
-                      />
-                      <Input
-                        label="ZIP Code"
-                        placeholder="10001"
-                        value={shippingData.zipCode}
-                        onChange={(e) => setShippingData({ ...shippingData, zipCode: e.target.value })}
-                      />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Delivery Address</h2>
+
+                  {showAddressForm ? (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Address</h3>
+                      <form onSubmit={handleAddressSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <Input
+                            label="Full Name *"
+                            value={addressFormData.fullName}
+                            onChange={(e) => setAddressFormData({ ...addressFormData, fullName: e.target.value })}
+                          />
+                          <Input
+                            label="Phone *"
+                            value={addressFormData.phone}
+                            onChange={(e) => setAddressFormData({ ...addressFormData, phone: e.target.value })}
+                          />
+                        </div>
+                        <Input
+                          label="Address Line 1 *"
+                          value={addressFormData.addressLine1}
+                          onChange={(e) => setAddressFormData({ ...addressFormData, addressLine1: e.target.value })}
+                        />
+                        <Input
+                          label="Address Line 2"
+                          value={addressFormData.addressLine2}
+                          onChange={(e) => setAddressFormData({ ...addressFormData, addressLine2: e.target.value })}
+                        />
+                        <div className="grid grid-cols-3 gap-4">
+                          <Input
+                            label="City *"
+                            value={addressFormData.city}
+                            onChange={(e) => setAddressFormData({ ...addressFormData, city: e.target.value })}
+                          />
+                          <Input
+                            label="State *"
+                            value={addressFormData.state}
+                            onChange={(e) => setAddressFormData({ ...addressFormData, state: e.target.value })}
+                          />
+                          <Input
+                            label="ZIP *"
+                            value={addressFormData.zipCode}
+                            onChange={(e) => setAddressFormData({ ...addressFormData, zipCode: e.target.value })}
+                          />
+                        </div>
+                        <div className="flex gap-3">
+                          <Button type="submit" variant="primary">Save Address</Button>
+                          <Button type="button" variant="secondary" onClick={() => setShowAddressForm(false)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
                     </div>
-                    <Button type="submit" variant="primary" className="w-full">
-                      Continue to Payment
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowAddressForm(true)}
+                      className="mb-6 flex items-center gap-2"
+                    >
+                      <Plus size={18} />
+                      Add New Address
                     </Button>
-                  </form>
+                  )}
+
+                  <div className="space-y-4">
+                    {addresses.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">No addresses found. Please add one.</p>
+                    ) : (
+                      addresses.map((address) => (
+                        <AddressCard
+                          key={address._id}
+                          address={address}
+                          isSelected={selectedAddress?._id === address._id}
+                          onSelect={setSelectedAddress}
+                          selectable={true}
+                          showActions={false}
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  <Button
+                    variant="primary"
+                    className="w-full mt-6"
+                    onClick={handleContinueToPayment}
+                    disabled={!selectedAddress}
+                  >
+                    Continue to Review
+                  </Button>
                 </div>
               )}
 
-              {step === "payment" && (
+              {/* Review Step */}
+              {step === "review" && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment Method</h2>
-                  <div className="space-y-4">
-                    <div className="p-4 border-2 border-blue-600 rounded-lg bg-blue-50">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="radio" checked onChange={() => {}} className="w-4 h-4" />
-                        <span className="font-medium text-gray-900">Credit Card</span>
-                      </label>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Review Order</h2>
+
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-gray-900 mb-3">Delivery Address</h3>
+                    {selectedAddress && (
+                      <AddressCard address={selectedAddress} showActions={false} />
+                    )}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => setStep("address")}
+                    >
+                      Change Address
+                    </Button>
+                  </div>
+
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
+                    <div className="space-y-2">
+                      {items.map((item) => (
+                        <div key={item.productId} className="flex justify-between text-sm py-2 border-b">
+                          <span className="text-gray-700">{item.title} x {item.quantity}</span>
+                          <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-600 transition-colors">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="radio" onChange={() => {}} className="w-4 h-4" />
-                        <span className="font-medium text-gray-900">PayPal</span>
-                      </label>
-                    </div>
-                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600 mb-3">Card Details (Demo)</p>
-                      <Input label="Card Number" placeholder="4532 1234 5678 9010" disabled />
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <Input label="Expiry" placeholder="12/25" disabled />
-                        <Input label="CVV" placeholder="123" disabled />
-                      </div>
-                    </div>
-                    <Button variant="primary" className="w-full" isLoading={loading} onClick={handlePlaceOrder}>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="primary"
+                      className="flex-1"
+                      isLoading={loading}
+                      onClick={handlePlaceOrder}
+                    >
                       Place Order
                     </Button>
                     <Button
                       variant="secondary"
-                      className="w-full"
-                      onClick={() => setStep("shipping")}
+                      onClick={() => setStep("address")}
                       disabled={loading}
                     >
                       Back
@@ -214,6 +298,7 @@ export const Checkout = () => {
             </div>
           </div>
 
+          {/* Order Summary Sidebar */}
           <div className="bg-white rounded-lg border border-gray-200 p-6 h-fit sticky top-24">
             <h3 className="font-semibold text-gray-900 mb-4">Order Summary</h3>
             <div className="space-y-3 mb-6 pb-6 border-b border-gray-200 max-h-48 overflow-y-auto">
@@ -227,21 +312,9 @@ export const Checkout = () => {
               ))}
             </div>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-gray-600">
-                <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Tax</span>
-                <span>${tax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Shipping</span>
-                <span>${shipping.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-200 mt-2">
+              <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-200">
                 <span>Total</span>
-                <span className="text-blue-600">${total.toFixed(2)}</span>
+                <span className="text-blue-600">${subtotal.toFixed(2)}</span>
               </div>
             </div>
           </div>

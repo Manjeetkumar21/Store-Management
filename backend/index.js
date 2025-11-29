@@ -9,6 +9,8 @@ const storeRoutes = require("./src/routes/store.routes.js");
 const productRoutes = require("./src/routes/product.routes.js");
 const cartRoutes = require("./src/routes/cart.routes.js");
 const orderRoutes = require("./src/routes/order.routes.js");
+const addressRoutes = require("./src/routes/address.routes.js");
+const paymentRoutes = require("./src/routes/payment.routes.js");
 const statsRoutes = require("./src/routes/stats.routes.js");
 const uploadRoutes = require("./src/routes/upload.routes.js");
 
@@ -37,6 +39,8 @@ app.use("/api/store", storeRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
+app.use("/api/address", addressRoutes);
+app.use("/api/payment", paymentRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/upload", uploadRoutes);
 

@@ -41,7 +41,6 @@ const auth = asyncHandler(async (req, res, next) => {
   }
 
 
-  console.log("user : ", req.user)
   req.role = decoded.role; // store role info if needed later
   next();
 });

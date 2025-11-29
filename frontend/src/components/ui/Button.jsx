@@ -1,13 +1,8 @@
 import React from "react"
 import { cn } from "@/lib/utils"
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger"
-  size?: "sm" | "md" | "lg"
-  isLoading?: boolean
-}
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const Button = React.forwardRef(
   ({ className, variant = "primary", size = "md", isLoading = false, children, ...props }, ref) => {
     const baseStyles = "font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 

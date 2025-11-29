@@ -8,6 +8,8 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard"
 import { Companies } from "./pages/admin/Companies"
 import { Stores } from "./pages/admin/Stores"
 import { Products } from "./pages/admin/Products"
+import { AdminOrders } from "./pages/admin/AdminOrders"
+import { AdminPayments } from "./pages/admin/AdminPayments"
 
 // Store Pages
 import { StoreDashboard } from "./pages/store/StoreDashboard"
@@ -15,6 +17,8 @@ import { StoreProducts } from "./pages/store/Products"
 import { Cart } from "./pages/store/Cart"
 import { Checkout } from "./pages/store/Checkout"
 import { Orders } from "./pages/store/Orders"
+import { AddressManagement } from "./pages/store/AddressManagement"
+import { PaymentQR } from "./pages/store/PaymentQR"
 
 function App() {
   return (
@@ -53,6 +57,22 @@ function App() {
           element={
             <ProtectedRoute requiredRole="admin">
               <Products />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/orders"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/payments"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminPayments />
             </ProtectedRoute>
           }
         />
@@ -95,6 +115,22 @@ function App() {
           element={
             <ProtectedRoute requiredRole="store">
               <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/store/addresses"
+          element={
+            <ProtectedRoute requiredRole="store">
+              <AddressManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/store/payment/:orderId"
+          element={
+            <ProtectedRoute requiredRole="store">
+              <PaymentQR />
             </ProtectedRoute>
           }
         />

@@ -22,7 +22,6 @@ const createCompany = async (req, res) => {
       });
     }
 
-    console.log("req.user : ", req.user, req.user._id)
     const company = await Company.create({ name, description,createdBy: req.user._id, });
 
     return successResponse(res, 201, "Company created successfully", company);
