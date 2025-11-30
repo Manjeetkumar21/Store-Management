@@ -207,19 +207,19 @@ export const AdminDashboard = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-medium">
-                          {order.shippingAddress?.fullName?.charAt(0) || "?"}
+                          {order.storeId?.name?.charAt(0).toUpperCase() || "?"}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="font-semibold text-gray-900">
-                              {order.shippingAddress?.fullName || "Unknown Customer"}
+                              {order.storeId?.name || "Unknown Store"}
                             </p>
                             <span className="text-xs text-gray-400">•</span>
                             <p className="text-sm text-gray-500">#{order._id.slice(-6).toUpperCase()}</p>
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-xs text-gray-600">
-                              {order.storeId?.name || "Unknown Store"}
+                              {order.shippingAddress?.fullName || "Unknown Customer"}
                             </p>
                             <span className="text-xs text-gray-400">•</span>
                             <p className="text-xs text-gray-500">

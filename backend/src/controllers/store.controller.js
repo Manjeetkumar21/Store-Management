@@ -76,16 +76,19 @@ const getStoreById = async (req, res) => {
     const { id } = req.params;
     if (!id) return errorResponse(res, 400, "Store ID is required");
 
-    const store = await Store.findById(id);
+    const store = await Store.findById(id)
+      .select("-password")
+      .populate("companyId", "name email description createdAt")
+      .populate("products", "name price qty brand image category description");
+      
     if (!store) return errorResponse(res, 404, "Store not found");
 
-    return successResponse(res, 200, "Store details fetched", store);
+    return successResponse(res, 200, "Store fetched successfully", store);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
 };
 
-// UPDATE STORE
 const updateStore = async (req, res) => {
   try {
     const { id } = req.params;
