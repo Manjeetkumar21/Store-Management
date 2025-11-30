@@ -16,8 +16,8 @@ const StoreDetailsPage = ({ store, onBack }) => {
       <div className="space-y-6">
         {/* Header with Back Button */}
         <div className="flex items-center gap-4">
-          <button 
-            onClick={onBack} 
+          <button
+            onClick={onBack}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft size={24} className="text-gray-700" />
@@ -106,10 +106,10 @@ const StoreDetailsPage = ({ store, onBack }) => {
               <div>
                 <label className="text-xs font-medium text-gray-500 uppercase">Created</label>
                 <p className="text-gray-900 mt-1">
-                  {new Date(store.createdAt).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                  {new Date(store.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                   })}
                 </p>
               </div>
@@ -164,11 +164,10 @@ const StoreDetailsPage = ({ store, onBack }) => {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Stock</p>
-                      <p className={`text-lg font-bold ${
-                        product.qty > 10 ? 'text-green-600' : 
-                        product.qty > 5 ? 'text-yellow-600' : 
-                        'text-red-600'
-                      }`}>
+                      <p className={`text-lg font-bold ${product.qty > 10 ? 'text-green-600' :
+                          product.qty > 5 ? 'text-yellow-600' :
+                            'text-red-600'
+                        }`}>
                         {product.qty}
                       </p>
                     </div>
@@ -192,9 +191,9 @@ const StoreDetailsPage = ({ store, onBack }) => {
 const CompactStoreCard = ({ store, onClick }) => {
   const productCount = store.products?.length || 0
   const totalStock = store.products?.reduce((sum, p) => sum + p.qty, 0) || 0
-  
+
   return (
-    <div 
+    <div
       onClick={() => onClick(store)}
       className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg hover:border-blue-300 transition-all duration-200 cursor-pointer group"
     >
@@ -249,7 +248,12 @@ export const Stores = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchStores()
+    // Only fetch if stores are not already loaded
+    if (stores.length === 0) {
+      fetchStores()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const fetchStores = async () => {
@@ -300,7 +304,7 @@ export const Stores = () => {
   const handleDelete = async (storeId, e) => {
     e.stopPropagation()
     if (!window.confirm("Are you sure you want to delete this store?")) return
-    
+
     try {
       await axiosInstance.delete(`/store/${storeId}`)
       dispatch(deleteStore(storeId))

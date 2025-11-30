@@ -1,25 +1,32 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Package, Search, Filter } from "lucide-react";
 import toast from "react-hot-toast";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { Modal, ConfirmModal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
+import { formatCurrency } from "@/utils/currency";
 import axiosInstance from "@/api/axiosInstance";
 
-export const AdminOrders = () => {
+export function AdminOrders() {
+    const [searchParams] = useSearchParams();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState("all");
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, orderId: null, type: null });
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [cancelModal, setCancelModal] = useState({ isOpen: false, orderId: null });
     const [cancelReason, setCancelReason] = useState("");
-    const [cancellingOrderId, setCancellingOrderId] = useState(null);
 
     useEffect(() => {
         fetchOrders();
     }, [filterStatus]);
 
     const fetchOrders = async () => {
+        setLoading(true);
         try {
             const params = {};
             if (filterStatus !== "all") {
@@ -28,53 +35,63 @@ export const AdminOrders = () => {
             const response = await axiosInstance.get("/order", { params });
             setOrders(response.data.data);
         } catch (error) {
-            toast.error("Failed to fetch orders");
+            console.error("Error fetching orders:", error);
+            toast.error(error.response?.data?.message || "Failed to fetch orders");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleConfirmOrder = async (orderId) => {
-        if (!confirm("Confirm this order?")) return;
+    const handleConfirmAction = async () => {
+        if (!confirmModal.orderId || !confirmModal.type) return;
 
+        setIsProcessing(true);
         try {
-            await axiosInstance.patch(`/order/${orderId}/confirm`);
-            toast.success("Order confirmed successfully!");
+            if (confirmModal.type === "confirm") {
+                await axiosInstance.patch(`/order/${confirmModal.orderId}/confirm`);
+                toast.success("Order confirmed successfully!");
+            } else if (confirmModal.type === "ship") {
+                await axiosInstance.patch(`/order/${confirmModal.orderId}/ship`);
+                toast.success("Order marked as shipped!");
+            }
+            setConfirmModal({ isOpen: false, orderId: null, type: null });
             fetchOrders();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to confirm order");
+            toast.error(error.response?.data?.message || "Failed to process request");
+        } finally {
+            setIsProcessing(false);
         }
     };
 
-    const handleCancelOrder = async (orderId) => {
+    const handleCancelSubmit = async () => {
         if (!cancelReason.trim()) {
             toast.error("Please provide a cancellation reason");
             return;
         }
 
+        setIsProcessing(true);
         try {
-            await axiosInstance.patch(`/order/${orderId}/cancel`, {
+            await axiosInstance.patch(`/order/${cancelModal.orderId}/cancel`, {
                 reason: cancelReason,
             });
             toast.success("Order cancelled successfully!");
-            setCancellingOrderId(null);
+            setCancelModal({ isOpen: false, orderId: null });
             setCancelReason("");
             fetchOrders();
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to cancel order");
+        } finally {
+            setIsProcessing(false);
         }
     };
 
-    const handleMarkAsShipped = async (orderId) => {
-        if (!confirm("Mark this order as shipped?")) return;
+    const openConfirmModal = (orderId, type) => {
+        setConfirmModal({ isOpen: true, orderId, type });
+    };
 
-        try {
-            await axiosInstance.patch(`/order/${orderId}/ship`);
-            toast.success("Order marked as shipped!");
-            fetchOrders();
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to mark as shipped");
-        }
+    const openCancelModal = (orderId) => {
+        setCancelModal({ isOpen: true, orderId });
+        setCancelReason("");
     };
 
     const filteredOrders = orders.filter((order) => {
@@ -113,7 +130,7 @@ export const AdminOrders = () => {
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                             >
                                 <option value="all">All Orders</option>
                                 <option value="pending">Pending</option>
@@ -159,7 +176,7 @@ export const AdminOrders = () => {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-2xl font-bold text-blue-600">
-                                                    ₹{order.totalAmount.toFixed(2)}
+                                                    {formatCurrency(order.totalAmount)}
                                                 </p>
                                             </div>
                                         </div>
@@ -213,8 +230,8 @@ export const AdminOrders = () => {
                                         {order.status === "pending" && (
                                             <Button
                                                 variant="primary"
-                                                onClick={() => handleConfirmOrder(order._id)}
-                                                className="w-full"
+                                                onClick={() => openConfirmModal(order._id, "confirm")}
+                                                className="w-full cursor-pointer"
                                             >
                                                 Confirm Order
                                             </Button>
@@ -222,46 +239,13 @@ export const AdminOrders = () => {
 
                                         {/* Cancel Order */}
                                         {order.status !== "cancelled" && order.status !== "completed" && (
-                                            <>
-                                                {cancellingOrderId === order._id ? (
-                                                    <div className="space-y-2">
-                                                        <Input
-                                                            placeholder="Cancellation reason"
-                                                            value={cancelReason}
-                                                            onChange={(e) => setCancelReason(e.target.value)}
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            <Button
-                                                                variant="primary"
-                                                                onClick={() => handleCancelOrder(order._id)}
-                                                                className="flex-1"
-                                                                size="sm"
-                                                            >
-                                                                Confirm
-                                                            </Button>
-                                                            <Button
-                                                                variant="secondary"
-                                                                onClick={() => {
-                                                                    setCancellingOrderId(null);
-                                                                    setCancelReason("");
-                                                                }}
-                                                                className="flex-1"
-                                                                size="sm"
-                                                            >
-                                                                Cancel
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <Button
-                                                        variant="secondary"
-                                                        onClick={() => setCancellingOrderId(order._id)}
-                                                        className="w-full"
-                                                    >
-                                                        Cancel Order
-                                                    </Button>
-                                                )}
-                                            </>
+                                            <Button
+                                                variant="secondary"
+                                                onClick={() => openCancelModal(order._id)}
+                                                className="w-full cursor-pointer"
+                                            >
+                                                Cancel Order
+                                            </Button>
                                         )}
 
                                         {/* Mark as Shipped */}
@@ -270,8 +254,8 @@ export const AdminOrders = () => {
                                             order.shippingStatus !== "delivered" && (
                                                 <Button
                                                     variant="primary"
-                                                    onClick={() => handleMarkAsShipped(order._id)}
-                                                    className="w-full"
+                                                    onClick={() => openConfirmModal(order._id, "ship")}
+                                                    className="w-full cursor-pointer"
                                                 >
                                                     Mark as Shipped
                                                 </Button>
@@ -282,7 +266,7 @@ export const AdminOrders = () => {
                                             <Button
                                                 variant="secondary"
                                                 onClick={() => window.location.href = `/admin/payments`}
-                                                className="w-full"
+                                                className="w-full cursor-pointer"
                                             >
                                                 View Payment
                                             </Button>
@@ -301,7 +285,61 @@ export const AdminOrders = () => {
                         ))}
                     </div>
                 )}
+
+                {/* Confirmation Modal */}
+                <ConfirmModal
+                    isOpen={confirmModal.isOpen}
+                    onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                    onConfirm={handleConfirmAction}
+                    title={confirmModal.type === "confirm" ? "Confirm Order" : "Mark as Shipped"}
+                    message={
+                        confirmModal.type === "confirm"
+                            ? "Are you sure you want to confirm this order?"
+                            : "Are you sure you want to mark this order as shipped?"
+                    }
+                    confirmText={confirmModal.type === "confirm" ? "Confirm" : "Mark Shipped"}
+                    variant="primary"
+                    isLoading={isProcessing}
+                />
+
+                {/* Cancellation Modal */}
+                <Modal
+                    isOpen={cancelModal.isOpen}
+                    onClose={() => setCancelModal({ ...cancelModal, isOpen: false })}
+                    title="Cancel Order"
+                >
+                    <div className="space-y-4">
+                        <p className="text-gray-600">
+                            Are you sure you want to cancel this order? Please provide a reason for the cancellation.
+                        </p>
+                        <Input
+                            label="Cancellation Reason"
+                            placeholder="e.g., Out of stock, Customer request"
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                        />
+                        <div className="flex justify-end gap-3 mt-6">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setCancelModal({ ...cancelModal, isOpen: false })}
+                                disabled={isProcessing}
+                                className="cursor-pointer"
+                            >
+                                Back
+                            </Button>
+                            <Button
+                                variant="danger"
+                                onClick={handleCancelSubmit}
+                                isLoading={isProcessing}
+                                disabled={isProcessing}
+                                className="cursor-pointer"
+                            >
+                                Cancel Order
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </MainLayout>
     );
-};
+}

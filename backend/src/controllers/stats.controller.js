@@ -24,6 +24,7 @@ const getAdminStats = async (req, res) => {
     const recentOrders = await Order.find()
       .sort({ createdAt: -1 })
       .limit(10)
+      .populate('storeId', 'name')
       .select("-__v");
 
     return successResponse(res, 200, "Admin dashboard stats fetched", {

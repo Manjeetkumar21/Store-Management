@@ -2,12 +2,18 @@ import { createSlice } from "@reduxjs/toolkit"
 
 const initialState = {
   items: JSON.parse(localStorage.getItem("cart") || "[]"),
+  showBadge: false,
 }
 
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
+    setCart: (state, action) => {
+      state.items = action.payload
+      localStorage.setItem("cart", JSON.stringify(action.payload))
+      state.showBadge = true
+    },
     addToCart: (state, action) => {
       const existing = state.items.find((item) => item.productId === action.payload.productId)
       if (existing) {
@@ -16,11 +22,7 @@ const cartSlice = createSlice({
         state.items.push(action.payload)
       }
       localStorage.setItem("cart", JSON.stringify(state.items))
-    },
-    setCart: (state, action) => {
-      // Expects action.payload to be the array of items
-      state.items = action.payload
-      localStorage.setItem("cart", JSON.stringify(state.items))
+      state.showBadge = true
     },
     updateCartItem: (state, action) => {
       const item = state.items.find((i) => i.productId === action.payload.productId)
@@ -38,10 +40,13 @@ const cartSlice = createSlice({
     },
     clearCart: (state) => {
       state.items = []
-      localStorage.removeItem("cart")
+      localStorage.setItem("cart", JSON.stringify(state.items))
+    },
+    hideBadge: (state) => {
+      state.showBadge = false
     },
   },
 })
 
-export const { addToCart, updateCartItem, removeFromCart, clearCart, setCart } = cartSlice.actions
+export const { addToCart, setCart, updateCartItem, removeFromCart, clearCart, hideBadge } = cartSlice.actions
 export default cartSlice.reducer

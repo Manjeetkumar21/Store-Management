@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { formatCurrency } from "@/utils/currency";
 import axiosInstance from "@/api/axiosInstance";
 
 export const PaymentQR = () => {
@@ -174,7 +175,7 @@ export const PaymentQR = () => {
                             <div>
                                 <p className="text-gray-600 mb-1">Amount to Pay</p>
                                 <p className="font-bold text-2xl text-blue-600">
-                                    ₹{payment.amount.toFixed(2)}
+                                    {formatCurrency(payment.amount)}
                                 </p>
                             </div>
                         </div>

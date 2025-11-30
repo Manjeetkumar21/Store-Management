@@ -4,6 +4,9 @@ const initialState = {
   companies: [],
   stores: [],
   products: [],
+  orders: [],
+  payments: [],
+  dashboardStats: null,
   selectedCompany: null,
   selectedStore: null,
   loading: false,
@@ -49,6 +52,15 @@ const adminSlice = createSlice({
     deleteProduct: (state, action) => {
       state.products = state.products.filter((p) => p._id !== action.payload)
     },
+    setOrders: (state, action) => {
+      state.orders = action.payload
+    },
+    setPayments: (state, action) => {
+      state.payments = action.payload
+    },
+    setDashboardStats: (state, action) => {
+      state.dashboardStats = action.payload
+    },
     setError: (state, action) => {
       state.error = action.payload
     },
@@ -70,6 +82,9 @@ export const {
   addProduct,
   updateProduct,
   deleteProduct,
+  setOrders,
+  setPayments,
+  setDashboardStats,
   setError,
   clearError,
 } = adminSlice.actions

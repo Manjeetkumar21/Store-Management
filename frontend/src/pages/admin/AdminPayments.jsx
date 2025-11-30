@@ -5,6 +5,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { formatCurrency } from "@/utils/currency";
 import axiosInstance from "@/api/axiosInstance";
 
 export const AdminPayments = () => {
@@ -19,6 +20,7 @@ export const AdminPayments = () => {
     }, [filterStatus]);
 
     const fetchPayments = async () => {
+        setLoading(true);
         try {
             const params = {};
             if (filterStatus !== "all") {
@@ -27,7 +29,8 @@ export const AdminPayments = () => {
             const response = await axiosInstance.get("/payment", { params });
             setPayments(response.data.data);
         } catch (error) {
-            toast.error("Failed to fetch payments");
+            console.error("Error fetching payments:", error);
+            toast.error(error.response?.data?.message || "Failed to fetch payments");
         } finally {
             setLoading(false);
         }
@@ -89,7 +92,7 @@ export const AdminPayments = () => {
             </div>
             <div class="row" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
               <span class="label">Amount Paid:</span>
-              <span class="amount">₹${receiptData.amount.toFixed(2)}</span>
+              <span class="amount">₹${receiptData.amount.toLocaleString('en-IN')}</span>
             </div>
             <button onclick="window.print()" style="margin-top: 30px; padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer;">
               Print Receipt
@@ -171,7 +174,7 @@ export const AdminPayments = () => {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-2xl font-bold text-blue-600">
-                                                    ₹{payment.amount.toFixed(2)}
+                                                    {formatCurrency(payment.amount)}
                                                 </p>
                                             </div>
                                         </div>

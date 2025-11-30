@@ -10,7 +10,7 @@ export const Companies = () => {
   const dispatch = useAppDispatch()
   const { companies } = useAppSelector((state) => state.admin)
   const { user } = useAppSelector((state) => state.auth)
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [expandedCompany, setExpandedCompany] = useState(null)
@@ -24,7 +24,12 @@ export const Companies = () => {
   const [success, setSuccess] = useState(null)
 
   useEffect(() => {
-    fetchCompanies()
+    // Only fetch if companies are not already loaded
+    if (companies.length === 0) {
+      fetchCompanies()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -64,7 +69,7 @@ export const Companies = () => {
     try {
       setSubmitting(true)
       setError(null)
-      
+
       if (editingCompany) {
         // Update existing company
         const response = await axiosInstance.put(`/company/${editingCompany._id}`, formData)
@@ -79,7 +84,7 @@ export const Companies = () => {
         dispatch(addCompany(response.data.data))
         toast.success("Company added successfully!")
       }
-      
+
       setFormData({ name: "", email: "", description: "" })
       setEditingCompany(null)
       setIsModalOpen(false)
@@ -107,13 +112,13 @@ export const Companies = () => {
     setIsDeleteModalOpen(true)
   }
 
-  const   handleDelete = async () => {
+  const handleDelete = async () => {
     if (!deletingCompany) return
 
     try {
       setSubmitting(true)
       setError(null)
-      
+
       await axiosInstance.delete(`/company/${deletingCompany._id}`)
       toast.success("Company deleted successfully!")
       setIsDeleteModalOpen(false)
@@ -133,7 +138,7 @@ export const Companies = () => {
     setError(null)
   }
 
-  const filteredCompanies = companies.filter(company => 
+  const filteredCompanies = companies.filter(company =>
     company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     company.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -168,7 +173,7 @@ export const Companies = () => {
                 </div>
               </div>
             </div>
-            
+
             <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-semibold"
@@ -223,7 +228,7 @@ export const Companies = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group">
               <div className="flex items-center justify-between">
                 <div>
@@ -239,7 +244,7 @@ export const Companies = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group">
               <div className="flex items-center justify-between">
                 <div>
@@ -301,7 +306,7 @@ export const Companies = () => {
                         <div className="p-3 md:p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                           <Building2 className="text-white" size={24} />
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <h3 className="text-lg md:text-xl font-bold text-gray-900 truncate">{company.name}</h3>
                           <p className="text-gray-600 text-sm mt-1 line-clamp-2">{company.description || "No description provided"}</p>
@@ -323,14 +328,14 @@ export const Companies = () => {
                       </div>
 
                       <div className="flex items-center gap-2 justify-end md:justify-start">
-                        <button 
+                        <button
                           onClick={() => handleEdit(company)}
                           className="p-3 hover:bg-blue-50 text-blue-600 rounded-xl transition-all duration-200 hover:scale-110"
                           title="Edit company"
                         >
                           <Edit2 size={18} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteConfirm(company)}
                           className="p-3 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-200 hover:scale-110"
                           title="Delete company"
@@ -420,7 +425,7 @@ export const Companies = () => {
                         {editingCompany ? 'Update company details' : 'Fill in the details to create a new company'}
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={closeModal}
                       className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       disabled={submitting}
@@ -429,7 +434,7 @@ export const Companies = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="p-6 space-y-5">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -444,7 +449,7 @@ export const Companies = () => {
                       disabled={submitting}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Email Address <span className="text-red-500">*</span>
@@ -458,7 +463,7 @@ export const Companies = () => {
                       disabled={submitting}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Description
@@ -472,7 +477,7 @@ export const Companies = () => {
                       disabled={submitting}
                     />
                   </div>
-                  
+
                   <div className="flex gap-3 pt-4">
                     <button
                       onClick={closeModal}
@@ -513,10 +518,10 @@ export const Companies = () => {
                     <div className="flex-1 text-center">
                       <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Company</h3>
                       <p className="text-gray-600 text-sm mb-4">
-                        Are you sure you want to delete <span className="font-semibold text-gray-900">"{deletingCompany?.name}"</span>? 
+                        Are you sure you want to delete <span className="font-semibold text-gray-900">"{deletingCompany?.name}"</span>?
                         This action cannot be undone and will also remove all associated stores.
                       </p>
-                      
+
                       {deletingCompany?.stores?.length > 0 && (
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                           <p className="text-amber-800 text-sm font-medium">

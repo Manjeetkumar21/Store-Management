@@ -4,6 +4,7 @@ import { Package, Download, CheckCircle2 } from "lucide-react"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { Button } from "@/components/ui/Button"
 import { OrderStatusBadge } from "@/components/OrderStatusBadge"
+import { formatCurrency } from "@/utils/currency"
 import axiosInstance from "@/api/axiosInstance"
 import toast from "react-hot-toast"
 
@@ -138,7 +139,7 @@ export const Orders = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-blue-600">
-                      ₹{order.totalAmount.toFixed(2)}
+                      {formatCurrency(order.totalAmount)}
                     </p>
                   </div>
                 </div>

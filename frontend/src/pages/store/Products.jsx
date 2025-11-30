@@ -8,18 +8,16 @@ import { Button } from "@/components/ui/button"
 import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setCart } from "@/redux/slices/cartSlice"
-import { useNavigate } from "react-router-dom"
-
 // Product Card Component
 const ProductCard = ({ product, onAddToCart }) => {
-  const navigate = useNavigate()
   const [qty, setQty] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
 
   const handleAdd = async () => {
     setIsAdding(true)
     await onAddToCart(product, qty)
-    navigate('/store/cart')
+    setIsAdding(false)
+    setQty(1) // Reset quantity after adding
   }
 
   return (

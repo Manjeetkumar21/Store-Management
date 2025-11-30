@@ -5,6 +5,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AddressCard } from "@/components/AddressCard";
+import { ConfirmModal } from "@/components/ui/Modal";
 import axiosInstance from "@/api/axiosInstance";
 import { useAppSelector } from "@/redux/hooks";
 
@@ -13,8 +14,11 @@ export const AddressManagement = () => {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState(null);
-    const { user } = useAppSelector((state) => state.auth)
-    console.log("user : ", user?._id)
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user } = useAppSelector((state) => state.auth);
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -50,6 +54,7 @@ export const AddressManagement = () => {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             if (editingAddress) {
                 await axiosInstance.put(`/address/${editingAddress._id}`, formData);
@@ -65,6 +70,8 @@ export const AddressManagement = () => {
             fetchAddresses();
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to save address");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -83,15 +90,23 @@ export const AddressManagement = () => {
         setShowForm(true);
     };
 
-    const handleDelete = async (id) => {
-        if (!confirm("Are you sure you want to delete this address?")) return;
+    const handleDeleteClick = (id) => {
+        setDeletingId(id);
+        setShowDeleteModal(true);
+    };
 
+    const handleDeleteConfirm = async () => {
+        setIsDeleting(true);
         try {
-            await axiosInstance.delete(`/address/${id}`);
+            await axiosInstance.delete(`/address/${deletingId}`);
             toast.success("Address deleted successfully");
+            setShowDeleteModal(false);
+            setDeletingId(null);
             fetchAddresses();
         } catch (error) {
             toast.error("Failed to delete address");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -211,10 +226,10 @@ export const AddressManagement = () => {
                             />
 
                             <div className="flex gap-3 pt-4">
-                                <Button type="submit" variant="primary">
+                                <Button type="submit" variant="primary" isLoading={isSubmitting} disabled={isSubmitting} className="cursor-pointer">
                                     {editingAddress ? "Update Address" : "Save Address"}
                                 </Button>
-                                <Button type="button" variant="secondary" onClick={handleCancel}>
+                                <Button type="button" variant="secondary" onClick={handleCancel} disabled={isSubmitting} className="cursor-pointer">
                                     Cancel
                                 </Button>
                             </div>
@@ -239,13 +254,29 @@ export const AddressManagement = () => {
                                 key={address._id}
                                 address={address}
                                 onEdit={handleEdit}
-                                onDelete={handleDelete}
+                                onDelete={handleDeleteClick}
                                 onSetDefault={handleSetDefault}
                                 showActions={true}
                             />
                         ))}
                     </div>
                 )}
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setDeletingId(null);
+                    }}
+                    onConfirm={handleDeleteConfirm}
+                    title="Delete Address"
+                    message="Are you sure you want to delete this address? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    variant="danger"
+                    isLoading={isDeleting}
+                />
             </div>
         </MainLayout>
     );

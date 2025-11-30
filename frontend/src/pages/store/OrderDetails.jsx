@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { OrderTimeline } from "@/components/OrderTimeline";
+import { ConfirmModal } from "@/components/ui/Modal";
 import axiosInstance from "@/api/axiosInstance";
 
 export const OrderDetails = () => {
@@ -13,6 +14,8 @@ export const OrderDetails = () => {
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
 
     useEffect(() => {
         fetchOrderDetails();
@@ -31,14 +34,16 @@ export const OrderDetails = () => {
     };
 
     const handleConfirmReceived = async () => {
-        if (!confirm("Confirm that you have received this order?")) return;
-
+        setIsConfirming(true);
         try {
             await axiosInstance.patch(`/order/${orderId}/received`);
             toast.success("Order marked as received!");
+            setShowConfirmModal(false);
             fetchOrderDetails();
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to confirm order");
+        } finally {
+            setIsConfirming(false);
         }
     };
 
@@ -61,7 +66,7 @@ export const OrderDetails = () => {
             <style>
               body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
               .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-              .row { display: flex; justify-content: space-between; margin: 10px 0; }
+              .row { display: flex; justify-between: space-between; margin: 10px 0; }
               .label { font-weight: bold; }
               .amount { font-size: 24px; color: #2563eb; font-weight: bold; }
               @media print { button { display: none; } }
@@ -115,7 +120,7 @@ export const OrderDetails = () => {
             <MainLayout>
                 <div className="text-center py-12">
                     <p className="text-gray-500">Order not found</p>
-                    <Button variant="secondary" onClick={() => navigate("/store/orders")} className="mt-4">
+                    <Button variant="secondary" onClick={() => navigate("/store/orders")} className="mt-4 cursor-pointer">
                         Back to Orders
                     </Button>
                 </div>
@@ -129,7 +134,7 @@ export const OrderDetails = () => {
                 {/* Header */}
                 <button
                     onClick={() => navigate("/store/orders")}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
                 >
                     <ArrowLeft size={20} />
                     Back to Orders
@@ -308,7 +313,7 @@ export const OrderDetails = () => {
                                     <Button
                                         variant="primary"
                                         onClick={() => navigate(`/store/payment/${order._id}`)}
-                                        className="w-full flex items-center justify-center gap-2"
+                                        className="w-full flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         <CreditCard size={16} />
                                         Proceed to Payment
@@ -320,7 +325,7 @@ export const OrderDetails = () => {
                                     <Button
                                         variant="secondary"
                                         onClick={handleDownloadReceipt}
-                                        className="w-full flex items-center justify-center gap-2"
+                                        className="w-full flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         <Download size={16} />
                                         Download Receipt
@@ -331,8 +336,8 @@ export const OrderDetails = () => {
                                 {order.shippingStatus === "shipped" && !order.orderReceivedConfirmation && (
                                     <Button
                                         variant="primary"
-                                        onClick={handleConfirmReceived}
-                                        className="w-full flex items-center justify-center gap-2"
+                                        onClick={() => setShowConfirmModal(true)}
+                                        className="w-full flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         <CheckCircle2 size={16} />
                                         Confirm Received
@@ -342,6 +347,19 @@ export const OrderDetails = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Confirm Received Modal */}
+                <ConfirmModal
+                    isOpen={showConfirmModal}
+                    onClose={() => setShowConfirmModal(false)}
+                    onConfirm={handleConfirmReceived}
+                    title="Confirm Order Received"
+                    message="Have you received this order in good condition? This action confirms that the order has been delivered successfully."
+                    confirmText="Yes, Confirm"
+                    cancelText="Not Yet"
+                    variant="primary"
+                    isLoading={isConfirming}
+                />
             </div>
         </MainLayout>
     );
