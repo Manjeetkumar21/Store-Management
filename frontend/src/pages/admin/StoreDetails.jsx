@@ -22,6 +22,16 @@ export const StoreDetails = () => {
         email: "",
         location: "",
     })
+    const [productEditModal, setProductEditModal] = useState({ isOpen: false, product: null })
+    const [productDeleteModal, setProductDeleteModal] = useState({ isOpen: false, productId: null })
+    const [productFormData, setProductFormData] = useState({
+        name: "",
+        price: "",
+        qty: "",
+        brand: "",
+        category: "",
+        description: "",
+    })
 
     useEffect(() => {
         fetchStoreDetails()
@@ -68,6 +78,47 @@ export const StoreDetails = () => {
             navigate("/admin/stores")
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to delete store")
+            setIsProcessing(false)
+        }
+    }
+
+    const handleEditProduct = (product) => {
+        setProductFormData({
+            name: product.name,
+            price: product.price,
+            qty: product.qty,
+            brand: product.brand || "",
+            category: product.category || "",
+            description: product.description || "",
+        })
+        setProductEditModal({ isOpen: true, product })
+    }
+
+    const handleUpdateProduct = async (e) => {
+        e.preventDefault()
+        setIsProcessing(true)
+        try {
+            await axiosInstance.put(`/product/${productEditModal.product._id}`, productFormData)
+            toast.success("Product updated successfully!")
+            setProductEditModal({ isOpen: false, product: null })
+            fetchStoreDetails()
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to update product")
+        } finally {
+            setIsProcessing(false)
+        }
+    }
+
+    const handleDeleteProduct = async () => {
+        setIsProcessing(true)
+        try {
+            await axiosInstance.delete(`/product/${productDeleteModal.productId}`)
+            toast.success("Product deleted successfully!")
+            setProductDeleteModal({ isOpen: false, productId: null })
+            fetchStoreDetails()
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to delete product")
+        } finally {
             setIsProcessing(false)
         }
     }
@@ -365,6 +416,28 @@ export const StoreDetails = () => {
                                                     {formatCurrency(product.price * product.qty)}
                                                 </p>
                                             </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="flex gap-2 mt-3">
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    onClick={() => handleEditProduct(product)}
+                                                    className="flex-1 flex items-center justify-center gap-1"
+                                                >
+                                                    <Edit2 size={14} />
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="danger"
+                                                    size="sm"
+                                                    onClick={() => setProductDeleteModal({ isOpen: true, productId: product._id })}
+                                                    className="flex-1 flex items-center justify-center gap-1"
+                                                >
+                                                    <Trash2 size={14} />
+                                                    Delete
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -437,6 +510,102 @@ export const StoreDetails = () => {
                 title="Delete Store"
                 message={`Are you sure you want to delete "${store.name}"? This action cannot be undone and will also delete all associated products.`}
                 confirmText="Delete Store"
+                variant="danger"
+                isLoading={isProcessing}
+            />
+
+            {/* Product Edit Modal */}
+            <Modal
+                isOpen={productEditModal.isOpen}
+                onClose={() => setProductEditModal({ isOpen: false, product: null })}
+                title="Edit Product"
+            >
+                <form onSubmit={handleUpdateProduct} className="space-y-4">
+                    <Input
+                        label="Product Name"
+                        value={productFormData.name}
+                        onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
+                        required
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            label="Price"
+                            type="number"
+                            step="0.01"
+                            value={productFormData.price}
+                            onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
+                            required
+                        />
+                        <Input
+                            label="Quantity"
+                            type="number"
+                            value={productFormData.qty}
+                            onChange={(e) => setProductFormData({ ...productFormData, qty: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <Input
+                        label="Brand"
+                        value={productFormData.brand}
+                        onChange={(e) => setProductFormData({ ...productFormData, brand: e.target.value })}
+                    />
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select
+                            value={productFormData.category}
+                            onChange={(e) => setProductFormData({ ...productFormData, category: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Select category</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="food">Food</option>
+                            <option value="books">Books</option>
+                            <option value="toys">Toys</option>
+                            <option value="sports">Sports</option>
+                            <option value="home">Home</option>
+                            <option value="beauty">Beauty</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea
+                            value={productFormData.description}
+                            onChange={(e) => setProductFormData({ ...productFormData, description: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setProductEditModal({ isOpen: false, product: null })}
+                            disabled={isProcessing}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            isLoading={isProcessing}
+                            disabled={isProcessing}
+                        >
+                            Update Product
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Product Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={productDeleteModal.isOpen}
+                onClose={() => setProductDeleteModal({ isOpen: false, productId: null })}
+                onConfirm={handleDeleteProduct}
+                title="Delete Product"
+                message="Are you sure you want to delete this product? This action cannot be undone."
+                confirmText="Delete Product"
                 variant="danger"
                 isLoading={isProcessing}
             />
