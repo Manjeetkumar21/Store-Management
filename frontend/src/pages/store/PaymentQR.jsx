@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { QrCode, ArrowLeft, CheckCircle } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import toast from "react-hot-toast";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/Button";
@@ -61,6 +62,17 @@ export const PaymentQR = () => {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const generateUpiUrl = () => {
+        if (!payment) return "";
+
+        const upiId = import.meta.env.VITE_UPI_ID || "21manjeetkumar21@oksbi";
+        const payeeName = import.meta.env.VITE_UPI_NAME || "Manjeet Kumar";
+        const amount = payment.amount.toFixed(2);
+        const transactionNote = `Order ${order._id.slice(-8).toUpperCase()}`;
+
+        return `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
     };
 
     if (loading) {
@@ -148,24 +160,24 @@ export const PaymentQR = () => {
 
                     {/* QR Code Display */}
                     <div className="flex justify-center mb-8">
-                        <div className="bg-white p-6 rounded-lg border-2 border-gray-300 shadow-lg">
-                            {payment.qrCodeUrl ? (
-                                <img
-                                    src={payment.qrCodeUrl}
-                                    alt="Payment QR Code"
-                                    className="w-64 h-64 object-contain"
-                                />
-                            ) : (
-                                <div className="w-64 h-64 flex items-center justify-center bg-gray-100 rounded">
-                                    <QrCode size={128} className="text-gray-400" />
-                                </div>
-                            )}
+                        <div className="bg-white p-8 rounded-xl border-2 border-blue-300 shadow-xl">
+                            <QRCodeSVG
+                                value={generateUpiUrl()}
+                                size={280}
+                                level="H"
+                                includeMargin={true}
+                                bgColor="#ffffff"
+                                fgColor="#1e40af"
+                            />
+                            <p className="text-center text-sm text-gray-600 mt-4 font-medium">
+                                Scan with any UPI app
+                            </p>
                         </div>
                     </div>
 
                     {/* Order Details */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 px-6 mb-8">
+                        <div className="flex justify-between items-center gap-4 text-sm">
                             <div>
                                 <p className="text-gray-600 mb-1">Order ID</p>
                                 <p className="font-semibold text-gray-900">

@@ -8,6 +8,7 @@ import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { OrderTimeline } from "@/components/OrderTimeline";
 import { ConfirmModal } from "@/components/ui/Modal";
 import axiosInstance from "@/api/axiosInstance";
+import { formatCurrency } from "@/utils/currency";
 
 export const OrderDetails = () => {
     const { orderId } = useParams();
@@ -151,7 +152,7 @@ export const OrderDetails = () => {
                         </p>
                     </div>
                     <div className="text-right">
-                        <p className="text-3xl font-bold text-blue-600">₹{order.totalAmount.toFixed(2)}</p>
+                        <p className="text-3xl font-bold text-blue-600">{formatCurrency(order.totalAmount)}</p>
                     </div>
                 </div>
 
@@ -192,11 +193,11 @@ export const OrderDetails = () => {
                                                 {item.productId?.name || "Product"}
                                             </h3>
                                             <p className="text-sm text-gray-600">Quantity: {item.qty}</p>
-                                            <p className="text-sm text-gray-600">Price: ₹{item.price.toFixed(2)}</p>
+                                            <p className="text-sm text-gray-600">Price: {formatCurrency(item.price)}</p>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-gray-900">
-                                                ₹{(item.price * item.qty).toFixed(2)}
+                                                {formatCurrency(item.price * item.qty)}
                                             </p>
                                         </div>
                                     </div>
@@ -295,11 +296,11 @@ export const OrderDetails = () => {
                             <div className="space-y-3">
                                 <div className="flex justify-between text-gray-600">
                                     <span>Subtotal</span>
-                                    <span>₹{order.totalAmount.toFixed(2)}</span>
+                                    <span>{formatCurrency(order.totalAmount)}</span>
                                 </div>
                                 <div className="flex justify-between font-bold text-lg pt-3 border-t border-gray-200">
                                     <span>Total</span>
-                                    <span className="text-blue-600">₹{order.totalAmount.toFixed(2)}</span>
+                                    <span className="text-blue-600">{formatCurrency(order.totalAmount)}</span>
                                 </div>
                             </div>
                         </div>

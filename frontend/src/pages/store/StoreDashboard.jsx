@@ -64,12 +64,6 @@ export const StoreDashboard = () => {
         }
     }, [user?._id])
 
-    // Helper function for currency formatting
-    const formatCurrency = (amount) => {
-        if (typeof amount !== 'number') return `$0.00`;
-        return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-
     const LoadingState = () => (
         <div className="text-center py-12 flex flex-col items-center justify-center bg-white rounded-lg border border-gray-200 shadow-sm">
             <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
