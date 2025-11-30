@@ -7,6 +7,7 @@ import { Login } from "./pages/Login"
 import { AdminDashboard } from "./pages/admin/AdminDashboard"
 import { Companies } from "./pages/admin/Companies"
 import { Stores } from "./pages/admin/Stores"
+import { StoreDetails } from "./pages/admin/StoreDetails"
 import { Products } from "./pages/admin/Products"
 import { AdminOrders } from "./pages/admin/AdminOrders"
 import { AdminPayments } from "./pages/admin/AdminPayments"
@@ -50,6 +51,14 @@ function App() {
           element={
             <ProtectedRoute requiredRole="admin">
               <Stores />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/stores/:storeId"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <StoreDetails />
             </ProtectedRoute>
           }
         />
