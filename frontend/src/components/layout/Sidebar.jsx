@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Building2, Store, Package, LogOut, MapPin, ShoppingCart, Wallet } from "lucide-react"
+import { BarChart3, Building2, Store, Package, LogOut, MapPin, ShoppingCart, Wallet, X } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { logout } from "@/redux/slices/authSlice"
 import { hideBadge } from "@/redux/slices/cartSlice"
@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { useEffect } from "react"
 
 
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation()
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
@@ -24,6 +24,13 @@ export const Sidebar = () => {
       return () => clearTimeout(timer)
     }
   }, [showBadge, dispatch])
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    if (onClose) {
+      onClose()
+    }
+  }, [location.pathname])
 
   const adminNavItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: <BarChart3 size={20} /> },
@@ -49,7 +56,21 @@ export const Sidebar = () => {
   }
 
   return (
-    <div className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm">
+    <div
+      className={cn(
+        "fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col shadow-lg z-40 transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}
+    >
+      {/* Close button for mobile */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 lg:hidden"
+        aria-label="Close menu"
+      >
+        <X size={20} className="text-gray-600" />
+      </button>
+
       <div className="p-6 border-b border-gray-200">
         <h1 className="text-2xl font-bold text-blue-600">{user?.role === "admin" ? "StoreHub - Admin" : "StoreHub - Store"}</h1>
         <p className="text-xs text-gray-500 mt-1">{user?.role === "admin" ? "Admin Panel" : "Store Panel"}</p>

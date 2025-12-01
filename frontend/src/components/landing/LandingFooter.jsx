@@ -1,0 +1,71 @@
+import { Store, Mail, Phone, MapPin } from "lucide-react"
+
+export const LandingFooter = ({ role }) => {
+    const currentYear = new Date().getFullYear()
+
+    return (
+        <footer className="bg-gray-900 text-gray-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Brand */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 bg-blue-600 rounded-lg">
+                                <Store className="text-white" size={20} />
+                            </div>
+                            <h3 className="text-xl font-bold text-white">StoreHub</h3>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                            {role === "admin"
+                                ? "Powerful admin tools for managing your store network."
+                                : "Streamline your store operations with our comprehensive management system."}
+                        </p>
+                    </div>
+
+                    {/* Quick Links */}
+                    <div>
+                        <h4 className="text-white font-semibold mb-4">Quick Links</h4>
+                        <ul className="space-y-2 text-sm">
+                            <li>
+                                <a href="#" className="hover:text-white transition-colors">About Us</a>
+                            </li>
+                            <li>
+                                <a href="#" className="hover:text-white transition-colors">Features</a>
+                            </li>
+                            <li>
+                                <a href="#" className="hover:text-white transition-colors">Pricing</a>
+                            </li>
+                            <li>
+                                <a href="#" className="hover:text-white transition-colors">Support</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Contact */}
+                    <div>
+                        <h4 className="text-white font-semibold mb-4">Contact Us</h4>
+                        <ul className="space-y-3 text-sm">
+                            <li className="flex items-center gap-2">
+                                <Mail size={16} className="text-blue-400" />
+                                <span>support@storehub.com</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <Phone size={16} className="text-blue-400" />
+                                <span>+1 (555) 123-4567</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <MapPin size={16} className="text-blue-400" />
+                                <span>123 Business St, City, Country</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+                    <p>&copy; {currentYear} StoreHub. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    )
+}

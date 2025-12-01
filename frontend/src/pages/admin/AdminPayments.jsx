@@ -304,10 +304,7 @@ export const AdminPayments = () => {
                                         {payment.status === "verified" && (
                                             <Button
                                                 variant="secondary"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDownloadReceipt(payment._id);
-                                                }}
+                                                onClick={() => handleDownloadReceipt(payment._id)}
                                                 className="w-full flex items-center justify-center gap-2"
                                             >
                                                 <Download size={16} />
@@ -325,7 +322,7 @@ export const AdminPayments = () => {
                                                 }}
                                                 className="w-full"
                                             >
-                                                View Order
+                                                View Order....
                                             </Button>
                                         )}
                                     </div>

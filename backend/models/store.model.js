@@ -16,6 +16,27 @@ const storeSchema = new mongoose.Schema(
     address: { type: String },
     phone: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    landingPage: {
+      hero: {
+        heading: { type: String, default: "Streamline Your Store Operations" },
+        subheading: { type: String, default: "Manage inventory, track orders, and grow your business with our comprehensive store management platform." },
+        heroImage: { type: String, default: "/store_hero_illustration.png" },
+      },
+      navbar: {
+        logoImage: { type: String, default: "" },
+      },
+      footer: {
+        address: {
+          street: { type: String, default: "" },
+          city: { type: String, default: "" },
+          state: { type: String, default: "" },
+          zipCode: { type: String, default: "" },
+          country: { type: String, default: "" },
+        },
+        phone: { type: String, default: "" },
+        email: { type: String, default: "" },
+      }
+    },
   },
   { 
     timestamps: true,

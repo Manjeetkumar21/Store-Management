@@ -154,30 +154,30 @@ export function AdminOrders() {
                         <p className="text-gray-500 text-lg">No orders found</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                         {filteredOrders.map((order) => (
                             <div
                                 key={order._id}
                                 onClick={() => navigate(`/admin/orders/${order._id}`)}
-                                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer transform hover:-translate-y-0.5"
+                                className="bg-white rounded-lg border border-gray-200 p-4 md:p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer transform hover:-translate-y-0.5"
                             >
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                                     {/* Order Info */}
                                     <div className="lg:col-span-2">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div>
-                                                <h3 className="font-semibold text-gray-900 text-lg">
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3 md:mb-4">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-gray-900 text-base md:text-lg">
                                                     Order #{order._id.slice(-8).toUpperCase()}
                                                 </h3>
-                                                <p className="text-sm text-gray-600 mt-1">
+                                                <p className="text-xs md:text-sm text-gray-600 mt-1">
                                                     Store: {order.storeId?.name || "Unknown"}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-xs md:text-sm text-gray-500">
                                                     {new Date(order.createdAt).toLocaleString()}
                                                 </p>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-bold text-blue-600">
+                                            <div className="text-left sm:text-right">
+                                                <p className="text-xl md:text-2xl font-bold text-blue-600">
                                                     {formatCurrency(order.totalAmount)}
                                                 </p>
                                             </div>
@@ -191,11 +191,11 @@ export function AdminOrders() {
                                         </div>
 
                                         {/* Products */}
-                                        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                                            <p className="text-sm font-medium text-gray-700 mb-2">Items:</p>
+                                        <div className="mb-3 md:mb-4 p-3 md:p-4 bg-gray-50 rounded-lg">
+                                            <p className="text-xs md:text-sm font-medium text-gray-700 mb-2">Items:</p>
                                             <ul className="space-y-1">
                                                 {order.products.map((item, index) => (
-                                                    <li key={index} className="text-sm text-gray-900">
+                                                    <li key={index} className="text-xs md:text-sm text-gray-900">
                                                         {item.qty}x {item.productId?.name || "Product"} - ₹
                                                         {(item.price * item.qty).toFixed(2)}
                                                     </li>
@@ -205,18 +205,18 @@ export function AdminOrders() {
 
                                         {/* Shipping Address */}
                                         {order.shippingAddress && (
-                                            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                                <p className="text-sm font-medium text-gray-700 mb-1">
+                                            <div className="p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                                <p className="text-xs md:text-sm font-medium text-gray-700 mb-1">
                                                     Delivery Address:
                                                 </p>
-                                                <p className="text-sm text-gray-900">
+                                                <p className="text-xs md:text-sm text-gray-900">
                                                     {order.shippingAddress.fullName} - {order.shippingAddress.phone}
                                                 </p>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-xs md:text-sm text-gray-600">
                                                     {order.shippingAddress.addressLine1}
                                                     {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}
                                                 </p>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-xs md:text-sm text-gray-600">
                                                     {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
                                                     {order.shippingAddress.zipCode}
                                                 </p>
@@ -225,8 +225,8 @@ export function AdminOrders() {
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="space-y-3">
-                                        <h4 className="font-semibold text-gray-900 mb-3">Actions</h4>
+                                    <div className="space-y-2 md:space-y-3">
+                                        <h4 className="font-semibold text-gray-900 mb-2 md:mb-3 text-sm md:text-base">Actions</h4>
 
                                         {/* Confirm Order */}
                                         {order.status === "pending" && (

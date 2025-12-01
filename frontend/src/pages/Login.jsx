@@ -90,9 +90,9 @@ export const Login = () => {
 
       // Redirect based on role
       if (user.role === "admin") {
-        navigate(ROUTES.ADMIN_DASHBOARD)
+        navigate(ROUTES.ADMIN_LANDING)
       } else {
-        navigate(ROUTES.STORE_DASHBOARD)
+        navigate(ROUTES.STORE_LANDING)
       }
     } catch (error) {
       const message = error.response?.data?.message || "Login failed. Please try again."

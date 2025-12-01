@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { Toaster } from "react-hot-toast"
 import { ProtectedRoute } from "./components/ProtectedRoute"
+import { RootRedirect } from "./components/RootRedirect"
 import { Login } from "./pages/Login"
 
 // Admin Pages
 import { AdminDashboard } from "./pages/admin/AdminDashboard"
+import { AdminLanding } from "./pages/admin/AdminLanding"
 import { Companies } from "./pages/admin/Companies"
 import { Stores } from "./pages/admin/Stores"
 import { StoreDetails } from "./pages/admin/StoreDetails"
@@ -16,6 +18,7 @@ import { AdminPaymentDetails } from "./pages/admin/AdminPaymentDetails"
 
 // Store Pages
 import { StoreDashboard } from "./pages/store/StoreDashboard"
+import { StoreLanding } from "./pages/store/StoreLanding"
 import { StoreProducts } from "./pages/store/Products"
 import { Cart } from "./pages/store/Cart"
 import { Checkout } from "./pages/store/Checkout"
@@ -30,6 +33,24 @@ function App() {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
+
+        {/* Landing Pages */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminLanding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/store"
+          element={
+            <ProtectedRoute requiredRole="store">
+              <StoreLanding />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin Routes */}
         <Route
@@ -172,8 +193,8 @@ function App() {
         />
 
         {/* Default Routes */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )

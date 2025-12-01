@@ -17,4 +17,6 @@ export const ROUTES = {
   STORE_PRODUCTS: "/store/products",
   STORE_CART: "/store/cart",
   STORE_ORDERS: "/store/orders",
+  ADMIN_LANDING: "/admin",
+  STORE_LANDING: "/store",
 }

@@ -109,7 +109,7 @@ export const AdminDashboard = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-8 pb-8">
+      <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Overview of your platform's performance and recent activity.</p>
@@ -167,19 +167,19 @@ export const AdminDashboard = () => {
           <div className="">
             <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
               <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-                <TrendingUp className="text-white" size={24} />
+                <div className="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
+                  <TrendingUp className="text-white" size={24} />
+                </div>
+                <div>
+                  <h3 className="font-medium text-blue-100">Total Revenue</h3>
+                  <p className="text-sm text-blue-200">Lifetime earnings</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium text-blue-100">Total Revenue</h3>
-                <p className="text-sm text-blue-200">Lifetime earnings</p>
+              <p className="text-4xl font-bold mb-2">{formatCurrency(stats.revenue)}</p>
+              <div className="flex items-center gap-2 text-blue-100 text-sm bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
+                <TrendingUp size={14} />
+                <span>Revenue Overview</span>
               </div>
-            </div>
-            <p className="text-4xl font-bold mb-2">{formatCurrency(stats.revenue)}</p>
-            <div className="flex items-center gap-2 text-blue-100 text-sm bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
-              <TrendingUp size={14} />
-              <span>Revenue Overview</span>
-            </div>
             </div>
           </div>
 
@@ -192,7 +192,7 @@ export const AdminDashboard = () => {
               </h3>
               <button
                 onClick={() => navigate('/admin/orders')}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 hover:underline"
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 hover:underline hover:cursor-pointer"
               >
                 View All <ArrowRight size={16} />
               </button>
@@ -200,7 +200,7 @@ export const AdminDashboard = () => {
 
             <div className="divide-y divide-gray-100">
               {stats.recentOrders.length > 0 ? (
-                stats.recentOrders.map((order) => (
+                stats.recentOrders.slice(0, 6).map((order) => (
                   <div
                     key={order._id}
                     onClick={() => handleOrderClick(order._id)}

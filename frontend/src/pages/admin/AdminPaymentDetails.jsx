@@ -133,31 +133,34 @@ export const AdminPaymentDetails = () => {
 
     return (
         <MainLayout>
-            <div className="space-y-6 pb-8">
+            <div className="space-y-4 md:space-y-6 pb-8">
                 {/* Header */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                    <div className="flex items-start gap-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                         <button
                             onClick={() => navigate("/admin/payments")}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-1"
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors self-start"
                         >
-                            <ArrowLeft size={24} className="text-gray-700" />
+                            <ArrowLeft size={20} className="text-gray-700 sm:w-6 sm:h-6" />
                         </button>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-3 bg-green-50 rounded-lg">
-                                    <CreditCard size={28} className="text-green-600" />
+                        <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                <div className="p-2 sm:p-3 bg-green-50 rounded-lg self-start">
+                                    <CreditCard size={20} className="text-green-600 sm:w-7 sm:h-7" />
                                 </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold text-gray-900">Payment #{payment._id.slice(-8).toUpperCase()}</h1>
-                                    <p className="text-gray-500 text-sm mt-1">
+                                <div className="flex-1 min-w-0">
+                                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">Payment #{payment._id.slice(-8).toUpperCase()}</h1>
+                                    <p className="text-gray-500 text-xs sm:text-sm mt-1">
                                         Created on {new Date(payment.createdAt).toLocaleDateString('en-IN')} at {new Date(payment.createdAt).toLocaleTimeString()}
                                     </p>
                                 </div>
                             </div>
+                            <div className="sm:hidden mt-3">
+                                <p className="text-2xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
+                            </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-3xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
+                        <div className="hidden sm:block text-right">
+                            <p className="text-2xl md:text-3xl font-bold text-green-600">{formatCurrency(payment.amount)}</p>
                         </div>
                     </div>
 
@@ -172,37 +175,37 @@ export const AdminPaymentDetails = () => {
                     {/* Left Column - Payment Details */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Payment Information */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Information</h2>
-                            <div className="space-y-4">
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Payment Information</h2>
+                            <div className="space-y-3 md:space-y-4">
+                                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                         <div>
-                                            <p className="text-sm text-gray-600 mb-1">Payment Method</p>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="text-xs md:text-sm text-gray-600 mb-1">Payment Method</p>
+                                            <p className="font-semibold text-gray-900 text-sm md:text-base">
                                                 {payment.paymentMethod.toUpperCase().replace("_", " ")}
                                             </p>
                                         </div>
                                         {payment.transactionId && (
                                             <div>
-                                                <p className="text-sm text-gray-600 mb-1">Transaction ID</p>
-                                                <p className="font-mono font-semibold text-gray-900">
+                                                <p className="text-xs md:text-sm text-gray-600 mb-1">Transaction ID</p>
+                                                <p className="font-mono font-semibold text-gray-900 text-xs md:text-sm break-all">
                                                     {payment.transactionId}
                                                 </p>
                                             </div>
                                         )}
                                         {payment.paidAt && (
                                             <div>
-                                                <p className="text-sm text-gray-600 mb-1">Paid At</p>
-                                                <p className="text-gray-900">
+                                                <p className="text-xs md:text-sm text-gray-600 mb-1">Paid At</p>
+                                                <p className="text-gray-900 text-xs md:text-sm">
                                                     {new Date(payment.paidAt).toLocaleString()}
                                                 </p>
                                             </div>
                                         )}
                                         {payment.verifiedAt && (
                                             <div>
-                                                <p className="text-sm text-gray-600 mb-1">Verified At</p>
-                                                <p className="text-gray-900">
+                                                <p className="text-xs md:text-sm text-gray-600 mb-1">Verified At</p>
+                                                <p className="text-gray-900 text-xs md:text-sm">
                                                     {new Date(payment.verifiedAt).toLocaleString()}
                                                 </p>
                                             </div>
@@ -211,9 +214,9 @@ export const AdminPaymentDetails = () => {
                                 </div>
 
                                 {payment.notes && (
-                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p className="text-sm font-medium text-yellow-900 mb-1">Verification Notes:</p>
-                                        <p className="text-sm text-yellow-700">{payment.notes}</p>
+                                    <div className="p-3 md:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <p className="text-xs md:text-sm font-medium text-yellow-900 mb-1">Verification Notes:</p>
+                                        <p className="text-xs md:text-sm text-yellow-700">{payment.notes}</p>
                                     </div>
                                 )}
                             </div>
@@ -221,18 +224,18 @@ export const AdminPaymentDetails = () => {
 
                         {/* Related Order Information */}
                         {payment.orderId && (
-                            <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4">Related Order</h2>
-                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-semibold text-gray-900">
+                            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                                <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Related Order</h2>
+                                <div className="p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold text-gray-900 text-sm md:text-base">
                                                 Order #{payment.orderId._id?.slice(-8).toUpperCase() || "N/A"}
                                             </p>
-                                            <p className="text-sm text-gray-600 mt-1">
+                                            <p className="text-xs md:text-sm text-gray-600 mt-1">
                                                 Store: {payment.orderId.storeId?.name || "Unknown"}
                                             </p>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-xs md:text-sm text-gray-600">
                                                 Status: {payment.orderId.status || "N/A"}
                                             </p>
                                         </div>
@@ -240,9 +243,9 @@ export const AdminPaymentDetails = () => {
                                             variant="secondary"
                                             size="sm"
                                             onClick={() => navigate(`/admin/orders/${payment.orderId._id || payment.orderId}`)}
-                                            className="flex items-center gap-2"
+                                            className="flex items-center gap-2 w-full sm:w-auto text-xs md:text-sm"
                                         >
-                                            <Eye size={16} />
+                                            <Eye size={14} className="md:w-4 md:h-4" />
                                             View Order
                                         </Button>
                                     </div>
@@ -252,36 +255,36 @@ export const AdminPaymentDetails = () => {
                     </div>
 
                     {/* Right Column - Actions */}
-                    <div className="space-y-6">
+                    <div className="space-y-4 md:space-y-6">
                         {/* Verification Actions */}
                         {payment.status === "submitted" && (
-                            <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                <h3 className="font-semibold text-gray-900 mb-4">Verify Payment</h3>
-                                <div className="space-y-4">
+                            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                                <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 text-sm md:text-base">Verify Payment</h3>
+                                <div className="space-y-3 md:space-y-4">
                                     <Input
                                         label="Verification Notes (Optional)"
                                         placeholder="Add notes about verification..."
                                         value={verificationNotes}
                                         onChange={(e) => setVerificationNotes(e.target.value)}
                                     />
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <Button
                                             variant="primary"
                                             onClick={() => handleVerifyPayment(true)}
                                             disabled={isProcessing}
                                             isLoading={isProcessing}
-                                            className="flex-1 flex items-center justify-center gap-2"
+                                            className="flex-1 flex items-center justify-center gap-2 text-sm md:text-base"
                                         >
-                                            <CheckCircle size={16} />
+                                            <CheckCircle size={14} className="md:w-4 md:h-4" />
                                             Verify
                                         </Button>
                                         <Button
                                             variant="danger"
                                             onClick={() => handleVerifyPayment(false)}
                                             disabled={isProcessing}
-                                            className="flex-1 flex items-center justify-center gap-2"
+                                            className="flex-1 flex items-center justify-center gap-2 text-sm md:text-base"
                                         >
-                                            <XCircle size={16} />
+                                            <XCircle size={14} className="md:w-4 md:h-4" />
                                             Reject
                                         </Button>
                                     </div>
@@ -291,28 +294,28 @@ export const AdminPaymentDetails = () => {
 
                         {/* Download Receipt */}
                         {payment.status === "verified" && (
-                            <div className="bg-white rounded-lg border border-gray-200 p-6">
-                                <h3 className="font-semibold text-gray-900 mb-4">Actions</h3>
+                            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                                <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 text-sm md:text-base">Actions</h3>
                                 <Button
                                     variant="secondary"
                                     onClick={handleDownloadReceipt}
-                                    className="w-full flex items-center justify-center gap-2"
+                                    className="w-full flex items-center justify-center gap-2 text-sm md:text-base"
                                 >
-                                    <Download size={16} />
+                                    <Download size={14} className="md:w-4 md:h-4" />
                                     Download Receipt
                                 </Button>
                             </div>
                         )}
 
                         {/* Payment Summary */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-6">
-                            <h3 className="font-semibold text-gray-900 mb-4">Payment Summary</h3>
-                            <div className="space-y-3">
-                                <div className="flex justify-between text-gray-600">
+                        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                            <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 text-sm md:text-base">Payment Summary</h3>
+                            <div className="space-y-2 md:space-y-3">
+                                <div className="flex justify-between text-gray-600 text-sm md:text-base">
                                     <span>Amount</span>
                                     <span>{formatCurrency(payment.amount)}</span>
                                 </div>
-                                <div className="flex justify-between font-bold text-lg pt-3 border-t border-gray-200">
+                                <div className="flex justify-between font-bold text-base md:text-lg pt-2 md:pt-3 border-t border-gray-200">
                                     <span>Total</span>
                                     <span className="text-green-600">{formatCurrency(payment.amount)}</span>
                                 </div>
