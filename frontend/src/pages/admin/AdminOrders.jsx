@@ -232,7 +232,10 @@ export function AdminOrders() {
                                         {order.status === "pending" && (
                                             <Button
                                                 variant="primary"
-                                                onClick={() => openConfirmModal(order._id, "confirm")}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openConfirmModal(order._id, "confirm");
+                                                }}
                                                 className="w-full cursor-pointer"
                                             >
                                                 Confirm Order
