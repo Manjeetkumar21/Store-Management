@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Plus, Edit2, Trash2, Building2, Store, Mail, Calendar, ChevronDown, ChevronUp, Search, Loader2, AlertCircle, TrendingUp, X, CheckCircle2, AlertTriangle } from "lucide-react"
+import { Plus, Edit2, Trash2, Building2, Store, Mail, Calendar, ChevronDown, ChevronUp, ChevronRight, Search, Loader2, AlertCircle, TrendingUp, X, CheckCircle2, AlertTriangle, Package } from "lucide-react"
 import { MainLayout } from "@/components/layout/MainLayout"
 import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
@@ -298,30 +298,39 @@ export const Companies = () => {
               {filteredCompanies.map((company) => (
                 <div
                   key={company._id}
-                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden group"
+                  onClick={() => company.stores?.length > 0 && setExpandedCompany(expandedCompany === company._id ? null : company._id)}
+                  className="bg-gradient-to-br from-white via-white to-blue-50/30 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200 overflow-hidden group cursor-pointer"
                 >
+                  {/* Decorative gradient bar */}
+                  <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+
                   <div className="p-4 md:p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1">
-                        <div className="p-3 md:p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                          <Building2 className="text-white" size={24} />
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                          <div className="relative p-3 md:p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                            <Building2 className="text-white" size={24} />
+                          </div>
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg md:text-xl font-bold text-gray-900 truncate">{company.name}</h3>
+                          <h3 className="text-lg md:text-xl font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                            {company.name}
+                          </h3>
                           <p className="text-gray-600 text-sm mt-1 line-clamp-2">{company.description || "No description provided"}</p>
                           <div className="flex flex-wrap items-center gap-3 md:gap-6 mt-3">
-                            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
-                              <Mail size={16} className="text-blue-600 flex-shrink-0" />
-                              <span className="truncate">{company.email || 'No email'}</span>
+                            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 bg-blue-50 px-3 py-1.5 rounded-full">
+                              <Mail size={14} className="text-blue-600 flex-shrink-0" />
+                              <span className="truncate font-medium">{company.email || 'No email'}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
-                              <Store size={16} className="text-green-600 flex-shrink-0" />
-                              <span className="font-medium">{company.stores?.length || 0} {company.stores?.length === 1 ? 'Store' : 'Stores'}</span>
+                            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 bg-green-50 px-3 py-1.5 rounded-full">
+                              <Store size={14} className="text-green-600 flex-shrink-0" />
+                              <span className="font-semibold">{company.stores?.length || 0} {company.stores?.length === 1 ? 'Store' : 'Stores'}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
-                              <Calendar size={16} className="text-purple-600 flex-shrink-0" />
-                              <span>{formatDate(company.createdAt)}</span>
+                            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 bg-purple-50 px-3 py-1.5 rounded-full">
+                              <Calendar size={14} className="text-purple-600 flex-shrink-0" />
+                              <span className="font-medium">{formatDate(company.createdAt)}</span>
                             </div>
                           </div>
                         </div>
@@ -329,27 +338,29 @@ export const Companies = () => {
 
                       <div className="flex items-center gap-2 justify-end md:justify-start">
                         <button
-                          onClick={() => handleEdit(company)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(company);
+                          }}
                           className="p-3 hover:bg-blue-50 text-blue-600 rounded-xl transition-all duration-200 hover:scale-110"
                           title="Edit company"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
-                          onClick={() => handleDeleteConfirm(company)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteConfirm(company);
+                          }}
                           className="p-3 hover:bg-red-50 text-red-600 rounded-xl transition-all duration-200 hover:scale-110"
                           title="Delete company"
                         >
                           <Trash2 size={18} />
                         </button>
                         {company.stores?.length > 0 && (
-                          <button
-                            onClick={() => setExpandedCompany(expandedCompany === company._id ? null : company._id)}
-                            className="p-3 hover:bg-gray-100 text-gray-600 rounded-xl transition-all duration-200 ml-2"
-                            title={expandedCompany === company._id ? "Hide stores" : "Show stores"}
-                          >
+                          <div className="p-3 text-gray-600 ml-2">
                             {expandedCompany === company._id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                          </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -361,23 +372,49 @@ export const Companies = () => {
                           <Store size={16} className="text-green-600" />
                           Store Locations ({company.stores.length})
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {company.stores.map((store) => (
                             <div
                               key={store._id}
-                              className="p-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                              onClick={() => window.location.href = `/admin/stores/${store._id}`}
+                              className="group relative p-5 bg-gradient-to-br from-white to-blue-50 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
                             >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-semibold text-gray-900 truncate">{store.name}</h5>
-                                  <p className="text-sm text-gray-600 mt-1 truncate">{store.location}</p>
-                                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1 truncate">
-                                    <Mail size={12} className="flex-shrink-0" />
+                              {/* Hover Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/5 group-hover:to-indigo-500/5 rounded-xl transition-all duration-300"></div>
+
+                              <div className="relative z-10">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1 min-w-0">
+                                    <h5 className="font-bold text-gray-900 truncate text-lg group-hover:text-blue-600 transition-colors">
+                                      {store.name}
+                                    </h5>
+                                    <p className="text-sm text-gray-600 mt-1 truncate flex items-center gap-1">
+                                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+                                      {store.location}
+                                    </p>
+                                  </div>
+                                  <div className="p-2.5 bg-gradient-to-br from-green-100 to-green-200 rounded-lg shadow-sm group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
+                                    <Store size={18} className="text-green-600" />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2 mb-4">
+                                  <p className="text-xs text-gray-600 flex items-center gap-1.5 truncate">
+                                    <Mail size={12} className="flex-shrink-0 text-blue-500" />
                                     <span className="truncate">{store.email}</span>
                                   </p>
+                                  {store.products && (
+                                    <p className="text-xs text-gray-600 flex items-center gap-1.5">
+                                      <Package size={12} className="flex-shrink-0 text-purple-500" />
+                                      <span className="font-medium">{store.products.length} Products</span>
+                                    </p>
+                                  )}
                                 </div>
-                                <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0 ml-2">
-                                  <Store size={16} className="text-green-600" />
+
+                                {/* View Details Button */}
+                                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                                  <span className="text-xs text-gray-500 font-medium">Click to view details</span>
+                                  <ChevronRight size={16} className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300" />
                                 </div>
                               </div>
                             </div>

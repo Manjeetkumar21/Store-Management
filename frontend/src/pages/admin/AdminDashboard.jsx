@@ -164,8 +164,9 @@ export const AdminDashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Revenue Card */}
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
                 <TrendingUp className="text-white" size={24} />
               </div>
@@ -178,6 +179,7 @@ export const AdminDashboard = () => {
             <div className="flex items-center gap-2 text-blue-100 text-sm bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
               <TrendingUp size={14} />
               <span>Revenue Overview</span>
+            </div>
             </div>
           </div>
 

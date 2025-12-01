@@ -4,6 +4,7 @@ const { authorizeRoles } = require("../middlewares/role.middleware");
 const {
   initiatePayment,
   getPaymentByOrderId,
+  getPaymentById,
   submitTransactionId,
   verifyPayment,
   getAllPayments,
@@ -24,5 +25,6 @@ router.get("/:paymentId/receipt", downloadReceipt);
 router.post("/:orderId/initiate", authorizeRoles("admin"), initiatePayment);
 router.post("/:paymentId/verify", authorizeRoles("admin"), verifyPayment);
 router.get("/", authorizeRoles("admin"), getAllPayments);
+router.get("/:paymentId", getPaymentById);
 
 module.exports = router;

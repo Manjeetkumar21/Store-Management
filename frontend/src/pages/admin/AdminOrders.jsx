@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Package, Search, Filter } from "lucide-react";
 import toast from "react-hot-toast";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -12,6 +12,7 @@ import axiosInstance from "@/api/axiosInstance";
 
 export function AdminOrders() {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState("all");
@@ -157,7 +158,8 @@ export function AdminOrders() {
                         {filteredOrders.map((order) => (
                             <div
                                 key={order._id}
-                                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                                onClick={() => navigate(`/admin/orders/${order._id}`)}
+                                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer transform hover:-translate-y-0.5"
                             >
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     {/* Order Info */}
@@ -265,7 +267,10 @@ export function AdminOrders() {
                                         {order.paymentId && (
                                             <Button
                                                 variant="secondary"
-                                                onClick={() => window.location.href = `/admin/payments`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/admin/payments/${order.paymentId._id}`);
+                                                }}
                                                 className="w-full cursor-pointer"
                                             >
                                                 View Payment

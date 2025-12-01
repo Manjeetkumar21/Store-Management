@@ -68,6 +68,36 @@ const getPaymentByOrderId = async (req, res) => {
   }
 };
 
+// GET PAYMENT BY ID
+const getPaymentById = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const payment = await Payment.findById(paymentId)
+      .populate({
+        path: "orderId",
+        populate: { path: "storeId", select: "name email location" },
+      })
+      .populate("verifiedBy", "name email");
+
+    if (!payment) {
+      return errorResponse(res, 404, "Payment not found");
+    }
+
+    // Check authorization
+    if (req.role === "store") {
+      const order = await Order.findById(payment.orderId);
+      if (!order || !order.storeId.equals(req.user.id)) {
+        return errorResponse(res, 403, "Not authorized to view this payment");
+      }
+    }
+
+    return successResponse(res, 200, "Payment fetched successfully", payment);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+
 // SUBMIT TRANSACTION ID (Store submits after payment)
 const submitTransactionId = async (req, res) => {
   try {
@@ -234,6 +264,7 @@ const downloadReceipt = async (req, res) => {
 module.exports = {
   initiatePayment,
   getPaymentByOrderId,
+  getPaymentById,
   submitTransactionId,
   verifyPayment,
   getAllPayments,

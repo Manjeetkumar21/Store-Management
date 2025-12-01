@@ -51,7 +51,7 @@ export const Sidebar = () => {
   return (
     <div className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-blue-600">StoreHub</h1>
+        <h1 className="text-2xl font-bold text-blue-600">{user?.role === "admin" ? "StoreHub - Admin" : "StoreHub - Store"}</h1>
         <p className="text-xs text-gray-500 mt-1">{user?.role === "admin" ? "Admin Panel" : "Store Panel"}</p>
       </div>
 
@@ -62,7 +62,7 @@ export const Sidebar = () => {
             to={item.href}
             className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative cursor-pointer",
-              location.pathname === item.href
+              location.pathname === item.href || location.pathname.startsWith(item.href + "/")
                 ? "bg-blue-50 text-blue-600 font-medium"
                 : "text-gray-600 hover:bg-gray-50",
             )}

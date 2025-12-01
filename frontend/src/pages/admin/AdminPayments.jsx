@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CreditCard, CheckCircle, XCircle, Download } from "lucide-react";
 import toast from "react-hot-toast";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -9,6 +10,7 @@ import { formatCurrency } from "@/utils/currency";
 import axiosInstance from "@/api/axiosInstance";
 
 export const AdminPayments = () => {
+    const navigate = useNavigate();
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState("all");
@@ -152,7 +154,8 @@ export const AdminPayments = () => {
                         {filteredPayments.map((payment) => (
                             <div
                                 key={payment._id}
-                                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                                onClick={() => navigate(`/admin/payments/${payment._id}`)}
+                                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-green-300 transition-all cursor-pointer transform hover:-translate-y-0.5"
                             >
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     {/* Payment Info */}
@@ -303,10 +306,13 @@ export const AdminPayments = () => {
                                         {payment.orderId && (
                                             <Button
                                                 variant="secondary"
-                                                onClick={() => window.location.href = `/admin/orders`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/admin/orders/${payment.orderId._id}`);
+                                                }}
                                                 className="w-full"
                                             >
-                                                View Order
+                                                View Order....
                                             </Button>
                                         )}
                                     </div>

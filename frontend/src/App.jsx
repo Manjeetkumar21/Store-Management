@@ -10,7 +10,9 @@ import { Stores } from "./pages/admin/Stores"
 import { StoreDetails } from "./pages/admin/StoreDetails"
 import { Products } from "./pages/admin/Products"
 import { AdminOrders } from "./pages/admin/AdminOrders"
+import { AdminOrderDetails } from "./pages/admin/AdminOrderDetails"
 import { AdminPayments } from "./pages/admin/AdminPayments"
+import { AdminPaymentDetails } from "./pages/admin/AdminPaymentDetails"
 
 // Store Pages
 import { StoreDashboard } from "./pages/store/StoreDashboard"
@@ -79,10 +81,26 @@ function App() {
           }
         />
         <Route
+          path="/admin/orders/:orderId"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminOrderDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/payments"
           element={
             <ProtectedRoute requiredRole="admin">
               <AdminPayments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/payments/:paymentId"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminPaymentDetails />
             </ProtectedRoute>
           }
         />
