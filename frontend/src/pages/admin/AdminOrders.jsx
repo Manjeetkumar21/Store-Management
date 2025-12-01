@@ -243,7 +243,10 @@ export function AdminOrders() {
                                         {order.status !== "cancelled" && order.status !== "completed" && (
                                             <Button
                                                 variant="secondary"
-                                                onClick={() => openCancelModal(order._id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openCancelModal(order._id);
+                                                }}
                                                 className="w-full cursor-pointer"
                                             >
                                                 Cancel Order
@@ -256,7 +259,10 @@ export function AdminOrders() {
                                             order.shippingStatus !== "delivered" && (
                                                 <Button
                                                     variant="primary"
-                                                    onClick={() => openConfirmModal(order._id, "ship")}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openConfirmModal(order._id, "ship");
+                                                    }}
                                                     className="w-full cursor-pointer"
                                                 >
                                                     Mark as Shipped

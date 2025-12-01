@@ -252,7 +252,10 @@ export const AdminPayments = () => {
                                                         />
                                                         <Button
                                                             variant="primary"
-                                                            onClick={() => handleVerifyPayment(payment._id, true)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleVerifyPayment(payment._id, true);
+                                                            }}
                                                             className="w-full flex items-center justify-center gap-2"
                                                         >
                                                             <CheckCircle size={16} />
@@ -260,7 +263,10 @@ export const AdminPayments = () => {
                                                         </Button>
                                                         <Button
                                                             variant="secondary"
-                                                            onClick={() => handleVerifyPayment(payment._id, false)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleVerifyPayment(payment._id, false);
+                                                            }}
                                                             className="w-full flex items-center justify-center gap-2"
                                                         >
                                                             <XCircle size={16} />
@@ -268,7 +274,8 @@ export const AdminPayments = () => {
                                                         </Button>
                                                         <Button
                                                             variant="secondary"
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 setVerifyingPaymentId(null);
                                                                 setVerificationNotes("");
                                                             }}
@@ -281,7 +288,10 @@ export const AdminPayments = () => {
                                                 ) : (
                                                     <Button
                                                         variant="primary"
-                                                        onClick={() => setVerifyingPaymentId(payment._id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setVerifyingPaymentId(payment._id);
+                                                        }}
                                                         className="w-full"
                                                     >
                                                         Verify Payment
