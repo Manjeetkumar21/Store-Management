@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { formatCurrency } from "@/utils/currency";
 import axiosInstance from "@/api/axiosInstance";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export const AdminPayments = () => {
     const navigate = useNavigate();
@@ -111,16 +112,16 @@ export const AdminPayments = () => {
     const filteredPayments = payments;
 
     return (
-        <MainLayout>
+        <MainLayout
+            header={
+                <PageHeader
+                    title="Payment Management"
+                    subtitle="Verify and manage payments"
+                    icon={CreditCard }
+                />
+            }
+        >
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                        <CreditCard size={32} />
-                        Payment Management
-                    </h1>
-                    <p className="text-gray-600 mt-2">Verify and manage payments</p>
-                </div>
-
                 {/* Filter */}
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                     <div className="flex items-center gap-2">

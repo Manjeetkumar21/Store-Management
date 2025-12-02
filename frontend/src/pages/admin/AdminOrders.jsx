@@ -9,6 +9,7 @@ import { Modal, ConfirmModal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { formatCurrency } from "@/utils/currency";
 import axiosInstance from "@/api/axiosInstance";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export function AdminOrders() {
     const [searchParams] = useSearchParams();
@@ -103,16 +104,16 @@ export function AdminOrders() {
     });
 
     return (
-        <MainLayout>
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                        <Package size={32} />
-                        Order Management
-                    </h1>
-                    <p className="text-gray-600 mt-2">Manage all store orders</p>
-                </div>
-
+        <MainLayout
+            header={
+                <PageHeader
+                    title="Order Management"
+                    subtitle="Manage all store orders"
+                    icon={Package}
+                />
+            }
+        >
+            <div className="space-y-6"> 
                 {/* Filters */}
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Plus, Edit2, Trash2, Building2, Store, Mail, Calendar, ChevronDown, ChevronUp, ChevronRight, Search, Loader2, AlertCircle, TrendingUp, X, CheckCircle2, AlertTriangle, Package } from "lucide-react"
 import { MainLayout } from "@/components/layout/MainLayout"
+import { PageHeader } from "@/components/layout/PageHeader"
 import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setCompanies, addCompany } from "@/redux/slices/adminSlice"
@@ -155,25 +156,13 @@ export const Companies = () => {
   const avgStores = companies.length > 0 ? (totalStores / companies.length).toFixed(1) : 0
 
   return (
-    <MainLayout>
-      <div className="h-full p-4 md:p-8">
-        <div className="max-w-full mx-auto space-y-6 md:space-y-8">
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg">
-                  <Building2 className="text-white" size={28} />
-                </div>
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    Companies
-                  </h1>
-                  <p className="text-gray-600 mt-1 text-sm md:text-base">Manage and monitor your business portfolio</p>
-                </div>
-              </div>
-            </div>
-
+    <MainLayout
+      header={
+        <PageHeader
+          title="Companies"
+          subtitle="Manage and monitor your business portfolio"
+          icon={Building2}
+          actions={
             <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-semibold"
@@ -181,7 +170,12 @@ export const Companies = () => {
               <Plus size={20} />
               <span>Add Company</span>
             </button>
-          </div>
+          }
+        />
+      }
+    >
+      <div className="h-full">
+        <div className="max-w-full mx-auto space-y-6 md:space-y-8">
 
           {/* Success Alert */}
           {success && (

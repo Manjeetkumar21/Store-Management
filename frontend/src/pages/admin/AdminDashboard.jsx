@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { BarChart3, Building2, Store, Package, TrendingUp, AlertTriangle, Loader2, ArrowRight, ShoppingCart } from "lucide-react"
 import { MainLayout } from "@/components/layout/MainLayout"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { StatCard } from "@/components/dashboard/StatCard"
 import { OrderStatusBadge } from "@/components/OrderStatusBadge"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
@@ -108,12 +109,16 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <MainLayout>
+    <MainLayout
+      header={
+        <PageHeader
+          title="Admin Dashboard"
+          subtitle="Overview of your platform's performance and recent activity"
+          icon={BarChart3}
+        />
+      }
+    >
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Overview of your platform's performance and recent activity.</p>
-        </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

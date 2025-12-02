@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
-import { Plus, Edit2, Trash2 } from "lucide-react"
+import { Plus, Edit2, Trash2, Package } from "lucide-react"
 import toast from "react-hot-toast"
 import { MainLayout } from "@/components/layout/MainLayout"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Modal, ConfirmModal } from "@/components/ui/Modal"
@@ -140,18 +141,26 @@ export const Products = () => {
   }
 
   return (
-    <MainLayout>
+    <MainLayout
+      header={
+        <PageHeader
+          title="Products"
+          subtitle="Manage all products across stores"
+          icon={Package}
+          actions={
+            <Button
+              variant="primary"
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Plus size={20} />
+              Add Product
+            </Button>
+          }
+        />
+      }
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-            <p className="text-gray-600 mt-1">Manage all products across stores</p>
-          </div>
-          <Button variant="primary" onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 cursor-pointer">
-            <Plus size={20} />
-            Add Product
-          </Button>
-        </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <Table

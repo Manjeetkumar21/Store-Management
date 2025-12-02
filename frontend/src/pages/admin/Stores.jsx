@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Plus, Edit2, Trash2, MapPin, Building2, Store as StoreIcon, Eye, ChevronDown, ChevronUp } from "lucide-react"
 import toast from "react-hot-toast"
 import { MainLayout } from "@/components/layout/MainLayout"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Modal, ConfirmModal } from "@/components/ui/Modal"
@@ -302,26 +303,26 @@ export const Stores = () => {
   }
 
   return (
-    <MainLayout>
+    <MainLayout
+      header={
+        <PageHeader
+          title="Store Management"
+          subtitle="Manage all stores in the system"
+          icon={StoreIcon}
+          actions={
+            <Button
+              variant="primary"
+              onClick={handleAddStore}
+              className="flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Add New Store
+            </Button>
+          }
+        />
+      }
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <StoreIcon size={32} />
-              Store Management
-            </h1>
-            <p className="text-gray-600 mt-2">Manage all stores in the system</p>
-          </div>
-          <Button
-            variant="primary"
-            onClick={handleAddStore}
-            className="flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Add New Store
-          </Button>
-        </div>
 
         {/* Stores Grid */}
         {loading ? (
