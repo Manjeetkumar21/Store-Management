@@ -34,23 +34,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
 
-        {/* Landing Pages */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <AdminLanding />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/store"
-          element={
-            <ProtectedRoute requiredRole="store">
-              <StoreLanding />
-            </ProtectedRoute>
-          }
-        />
+        {/* Landing Pages - Public */}
+        <Route path="/admin" element={<AdminLanding />} />
+        <Route path="/store" element={<StoreLanding />} />
 
         {/* Admin Routes */}
         <Route

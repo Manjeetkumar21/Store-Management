@@ -1,7 +1,7 @@
 "use client"
 
 import { Link, useLocation } from "react-router-dom"
-import { BarChart3, Building2, Store, Package, LogOut, MapPin, ShoppingCart, Wallet, X } from "lucide-react"
+import { BarChart3, Building2, Store, Package, LogOut, MapPin, ShoppingCart, Wallet, X, Home } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { logout } from "@/redux/slices/authSlice"
 import { hideBadge } from "@/redux/slices/cartSlice"
@@ -15,7 +15,6 @@ export const Sidebar = ({ isOpen, onClose }) => {
   const { user } = useAppSelector((state) => state.auth)
   const { items, showBadge } = useAppSelector((state) => state.cart)
 
-  // Auto-hide badge after 3 seconds
   useEffect(() => {
     if (showBadge) {
       const timer = setTimeout(() => {
@@ -25,7 +24,6 @@ export const Sidebar = ({ isOpen, onClose }) => {
     }
   }, [showBadge, dispatch])
 
-  // Close sidebar on route change (mobile)
   useEffect(() => {
     if (onClose) {
       onClose()
@@ -39,6 +37,8 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { name: "Products", href: "/admin/products", icon: <Package size={20} /> },
     { name: "Orders", href: "/admin/orders", icon: <Building2 size={20} /> },
     { name: "Payments", href: "/admin/payments", icon: <Wallet size={20} /> },
+    { name: "Home", href: "/admin", icon: <Home size={20} /> },
+
   ]
 
   const storeNavItems = [
@@ -47,6 +47,8 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { name: "Cart", href: "/store/cart", icon: <ShoppingCart size={20} />, badge: items.length },
     { name: "Orders", href: "/store/orders", icon: <Building2 size={20} /> },
     { name: "Addresses", href: "/store/addresses", icon: <MapPin size={20} /> },
+    { name: "Home", href: "/store", icon: <Home size={20} /> },
+
   ]
 
   const navItems = user?.role === "admin" ? adminNavItems : storeNavItems
@@ -62,7 +64,6 @@ export const Sidebar = ({ isOpen, onClose }) => {
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}
     >
-      {/* Close button for mobile */}
       <button
         onClick={onClose}
         className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 lg:hidden"
@@ -83,7 +84,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
             to={item.href}
             className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative cursor-pointer",
-              location.pathname === item.href || location.pathname.startsWith(item.href + "/")
+              item.name != "Home" && (location.pathname === item.href || location.pathname.startsWith(item.href + "/"))
                 ? "bg-blue-50 text-blue-600 font-medium"
                 : "text-gray-600 hover:bg-gray-50",
             )}
