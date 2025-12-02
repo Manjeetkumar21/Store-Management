@@ -343,9 +343,9 @@ export const StoreDetails = () => {
                             </div>
                             <div className="flex items-center gap-4">
                                 {totalProducts > 0 && (
-                                    <div className="text-right">
+                                    <div className="flex items-center gap-2 text-right border border-blue-400 px-4 py-2 rounded-full">
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">Total Value</p>
-                                        <p className="text-2xl font-bold text-blue-600">{formatCurrency(inventoryValue)}</p>
+                                        <p className="text-sm font-semibold text-blue-600 ">{formatCurrency(inventoryValue)}</p>
                                     </div>
                                 )}
                                 <Button
@@ -440,11 +440,11 @@ export const StoreDetails = () => {
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Unit Price</p>
-                                                        <p className="text-2xl font-bold text-blue-600">{formatCurrency(product.price)}</p>
+                                                        <p className="text-lg font-bold text-blue-600">{formatCurrency(product.price)}</p>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Quantity</p>
-                                                        <p className="text-2xl font-bold text-green-600">{product.qty}</p>
+                                                        <p className="text-lg font-bold text-green-600">{product.qty}</p>
                                                     </div>
                                                 </div>
                                             </div>

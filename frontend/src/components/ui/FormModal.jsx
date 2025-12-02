@@ -47,11 +47,11 @@ export function FormModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <div className="flex items-center bg-blue-400 text-white justify-between p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold">{title}</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 rounded-full transition-colors cursor-pointer active:scale-110 active:bg-blue-500"
               type="button"
             >
               <X size={24} />
