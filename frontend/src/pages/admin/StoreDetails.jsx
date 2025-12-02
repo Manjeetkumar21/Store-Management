@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Edit2, MapPin, Building2, Package, ShoppingBag, TrendingUp, Store as StoreIcon, Mail, Trash2, Calendar, Tag, Layers, Plus } from "lucide-react"
+import { ArrowLeft, Edit2, MapPin, Building2, Package, ShoppingBag, TrendingUp, Store as StoreIcon, Mail, Trash2, Calendar, Tag, Layers, Plus, ChevronDown, ChevronUp } from "lucide-react"
 import toast from "react-hot-toast"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { Button } from "@/components/ui/Button"
 import { Modal, ConfirmModal } from "@/components/ui/Modal"
+import { FormModal } from "@/components/ui/FormModal"
 import { Input } from "@/components/ui/Input"
 import axiosInstance from "@/api/axiosInstance"
 import { formatCurrency } from "@/utils/currency"
@@ -21,7 +22,37 @@ export const StoreDetails = () => {
         name: "",
         email: "",
         location: "",
+        landingPage: {
+            hero: {
+                heading: "",
+                subheading: "",
+                heroImage: "",
+            },
+            navbar: {
+                logoImage: "",
+            },
+            footer: {
+                address: {
+                    street: "",
+                    city: "",
+                    state: "",
+                    zipCode: "",
+                    country: "",
+                },
+                phone: "",
+                email: "",
+            }
+        }
     })
+    const [expandedSections, setExpandedSections] = useState({
+        hero: true,
+        navbar: false,
+        footer: false
+    })
+
+    const toggleSection = (section) => {
+        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
+    }
     const [productEditModal, setProductEditModal] = useState({ isOpen: false, product: null })
     const [productDeleteModal, setProductDeleteModal] = useState({ isOpen: false, productId: null })
     const [addProductModal, setAddProductModal] = useState(false)
@@ -48,6 +79,15 @@ export const StoreDetails = () => {
                 name: response.data.data.name,
                 email: response.data.data.email,
                 location: response.data.data.location,
+                landingPage: response.data.data.landingPage || {
+                    hero: { heading: "", subheading: "", heroImage: "" },
+                    navbar: { logoImage: "" },
+                    footer: {
+                        address: { street: "", city: "", state: "", zipCode: "", country: "" },
+                        phone: "",
+                        email: "",
+                    }
+                }
             })
         } catch (error) {
             toast.error("Failed to fetch store details")
@@ -487,18 +527,24 @@ export const StoreDetails = () => {
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            <Modal
+            {/* Edit Store Modal with Landing Page Customization */}
+            <FormModal
                 isOpen={editModalOpen}
+                size="lg"
                 onClose={() => setEditModalOpen(false)}
                 title="Edit Store"
+                onSubmit={handleUpdateStore}
+                submitLabel="Update Store"
+                cancelLabel="Cancel"
+                isProcessing={isProcessing}
             >
-                <form onSubmit={handleUpdateStore} className="space-y-4">
+                <div className="space-y-4">
                     <Input
                         label="Store Name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
+                        placeholder="Enter store name"
                     />
                     <Input
                         label="Email"
@@ -506,33 +552,244 @@ export const StoreDetails = () => {
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
+                        placeholder="store@example.com"
                     />
                     <Input
                         label="Location"
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                         required
+                        placeholder="Enter location"
                     />
-                    <div className="flex justify-end gap-3 mt-6">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => setEditModalOpen(false)}
-                            disabled={isProcessing}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            isLoading={isProcessing}
-                            disabled={isProcessing}
-                        >
-                            Update Store
-                        </Button>
+
+                    {/* Landing Page Customization - Interactive Sections */}
+                    <div className="border-t border-gray-200 pt-6 mt-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-base font-semibold text-gray-900">Landing Page Customization</h3>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Optional</span>
+                        </div>
+
+                        {/* Hero Section - Collapsible */}
+                        <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => toggleSection('hero')}
+                                className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                                        1
+                                    </div>
+                                    <span className="font-medium text-gray-900">Hero Section</span>
+                                </div>
+                                {expandedSections.hero ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                            </button>
+                            {expandedSections.hero && (
+                                <div className="p-4 space-y-3 bg-white">
+                                    <Input
+                                        label="Hero Heading"
+                                        value={formData.landingPage?.hero?.heading || ""}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            landingPage: {
+                                                ...formData.landingPage,
+                                                hero: { ...formData.landingPage?.hero, heading: e.target.value }
+                                            }
+                                        })}
+                                        placeholder="e.g., Welcome to Our Store"
+                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Hero Subheading</label>
+                                        <textarea
+                                            value={formData.landingPage?.hero?.subheading || ""}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                landingPage: {
+                                                    ...formData.landingPage,
+                                                    hero: { ...formData.landingPage?.hero, subheading: e.target.value }
+                                                }
+                                            })}
+                                            placeholder="Brief description of your store..."
+                                            rows={2}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                        />
+                                    </div>
+                                    <Input
+                                        label="Hero Image URL"
+                                        value={formData.landingPage?.hero?.heroImage || ""}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            landingPage: {
+                                                ...formData.landingPage,
+                                                hero: { ...formData.landingPage?.hero, heroImage: e.target.value }
+                                            }
+                                        })}
+                                        placeholder="/images/hero.png"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Navbar Section - Collapsible */}
+                        <div className="mb-4 border border-gray-200 rounded-lg overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => toggleSection('navbar')}
+                                className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-semibold text-sm">
+                                        2
+                                    </div>
+                                    <span className="font-medium text-gray-900">Navbar Logo</span>
+                                </div>
+                                {expandedSections.navbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                            </button>
+                            {expandedSections.navbar && (
+                                <div className="p-4 bg-white">
+                                    <Input
+                                        label="Logo Image URL"
+                                        value={formData.landingPage?.navbar?.logoImage || ""}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            landingPage: {
+                                                ...formData.landingPage,
+                                                navbar: { logoImage: e.target.value }
+                                            }
+                                        })}
+                                        placeholder="/images/logo.png"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer Section - Collapsible */}
+                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => toggleSection('footer')}
+                                className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-semibold text-sm">
+                                        3
+                                    </div>
+                                    <span className="font-medium text-gray-900">Footer Information</span>
+                                </div>
+                                {expandedSections.footer ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                            </button>
+                            {expandedSections.footer && (
+                                <div className="p-4 space-y-3 bg-white">
+                                    <Input
+                                        label="Street Address"
+                                        value={formData.landingPage?.footer?.address?.street || ""}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            landingPage: {
+                                                ...formData.landingPage,
+                                                footer: {
+                                                    ...formData.landingPage?.footer,
+                                                    address: { ...formData.landingPage?.footer?.address, street: e.target.value }
+                                                }
+                                            }
+                                        })}
+                                        placeholder="123 Main St"
+                                    />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Input
+                                            label="City"
+                                            value={formData.landingPage?.footer?.address?.city || ""}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                landingPage: {
+                                                    ...formData.landingPage,
+                                                    footer: {
+                                                        ...formData.landingPage?.footer,
+                                                        address: { ...formData.landingPage?.footer?.address, city: e.target.value }
+                                                    }
+                                                }
+                                            })}
+                                            placeholder="City"
+                                        />
+                                        <Input
+                                            label="State"
+                                            value={formData.landingPage?.footer?.address?.state || ""}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                landingPage: {
+                                                    ...formData.landingPage,
+                                                    footer: {
+                                                        ...formData.landingPage?.footer,
+                                                        address: { ...formData.landingPage?.footer?.address, state: e.target.value }
+                                                    }
+                                                }
+                                            })}
+                                            placeholder="State"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Input
+                                            label="Zip Code"
+                                            value={formData.landingPage?.footer?.address?.zipCode || ""}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                landingPage: {
+                                                    ...formData.landingPage,
+                                                    footer: {
+                                                        ...formData.landingPage?.footer,
+                                                        address: { ...formData.landingPage?.footer?.address, zipCode: e.target.value }
+                                                    }
+                                                }
+                                            })}
+                                            placeholder="12345"
+                                        />
+                                        <Input
+                                            label="Country"
+                                            value={formData.landingPage?.footer?.address?.country || ""}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                landingPage: {
+                                                    ...formData.landingPage,
+                                                    footer: {
+                                                        ...formData.landingPage?.footer,
+                                                        address: { ...formData.landingPage?.footer?.address, country: e.target.value }
+                                                    }
+                                                }
+                                            })}
+                                            placeholder="Country"
+                                        />
+                                    </div>
+                                    <Input
+                                        label="Footer Phone"
+                                        value={formData.landingPage?.footer?.phone || ""}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            landingPage: {
+                                                ...formData.landingPage,
+                                                footer: { ...formData.landingPage?.footer, phone: e.target.value }
+                                            }
+                                        })}
+                                        placeholder="+1 (555) 123-4567"
+                                    />
+                                    <Input
+                                        label="Footer Email"
+                                        type="email"
+                                        value={formData.landingPage?.footer?.email || ""}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            landingPage: {
+                                                ...formData.landingPage,
+                                                footer: { ...formData.landingPage?.footer, email: e.target.value }
+                                            }
+                                        })}
+                                        placeholder="contact@store.com"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </form>
-            </Modal>
+                </div>
+            </FormModal>
 
             {/* Delete Confirmation Modal */}
             <ConfirmModal
