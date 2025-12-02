@@ -7,7 +7,7 @@ export const TopBar = ({ onMenuClick }) => {
   const landingPageLink = user?.role === "admin" ? "/admin" : "/store"
 
   return (
-    <div className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 shadow-sm z-20">
+    <div className="w-full h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 shadow-sm z-20">
       <div className="flex items-center gap-4">
         {/* Hamburger menu button - visible only on mobile */}
         <button

@@ -60,7 +60,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
   return (
     <div
       className={cn(
-        "fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col shadow-lg z-40 transition-transform duration-300 ease-in-out",
+        " left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col shadow-lg z-40 transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}
     >

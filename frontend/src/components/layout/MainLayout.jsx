@@ -15,9 +15,9 @@ export const MainLayout = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="max-h-screen h-screen bg-gray-50 flex">
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-      <TopBar onMenuClick={toggleSidebar} />
+
 
       {/* Overlay for mobile */}
       {isSidebarOpen && (
@@ -27,7 +27,10 @@ export const MainLayout = ({ children }) => {
         />
       )}
 
-      <main className="lg:ml-64 mt-16 p-4 md:p-6 lg:p-8">{children}</main>
+      <div className="flex flex-col w-full">
+        <TopBar onMenuClick={toggleSidebar} />
+        <main className="flex-1 overflow-y-auto p-4">{children}</main>
+      </div>
     </div>
   )
 }
