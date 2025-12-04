@@ -1,8 +1,5 @@
-const Order = require("../../models/order.model.js");
-const Cart = require("../../models/cart.model.js");
-const Product = require("../../models/product.model.js");
-const Payment = require("../../models/payment.model.js");
-const Address = require("../../models/address.model.js");
+const { Order, Cart, Product, Payment, Address } = require("../../models/firestore");
+const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
 
@@ -12,8 +9,6 @@ const createOrderFromCart = async (req, res) => {
     if (req.role !== "store") 
       return errorResponse(res, 403, "Only store user can create order");
 
-    console.log(req.user);
-    const userId = req.user._id;
     const storeId = req.user.id;
     const { addressId } = req.body;
 
@@ -22,48 +17,52 @@ const createOrderFromCart = async (req, res) => {
     }
 
     // Verify address belongs to store
-    const address = await Address.findOne({ _id: addressId, storeId });
-    if (!address) {
+    const address = await Address.findOne({ id: addressId });
+    if (!address || address.getData().storeId !== storeId) {
       return errorResponse(res, 404, "Address not found");
     }
 
-    const cart = await Cart.findOne({ storeId });
-    if (!cart || cart.items.length === 0)
+    const cart = await Cart.findOne({ where: { storeId } });
+    if (!cart || cart.getData().items.length === 0)
       return errorResponse(res, 400, "Cart is empty");
 
     let totalAmount = 0;
     const products = [];
+    const cartData = cart.getData();
 
-    for (const item of cart.items) {
-      const prod = await Product.findById(item.productId);
+    for (const item of cartData.items) {
+      const prod = await Product.findOne({ id: item.productId });
 
       if (!prod)
         return errorResponse(res, 404, `Product not found: ${item.productId}`);
 
-      if (!prod.storeId.equals(storeId))
+      const prodData = prod.getData();
+      if (prodData.storeId !== storeId)
         return errorResponse(res, 403, "Product belongs to another store");
 
-      if (prod.qty < item.qty)
-        return errorResponse(res, 400, `Insufficient stock: ${prod.name}`);
+      if (prodData.qty < item.qty)
+        return errorResponse(res, 400, `Insufficient stock: ${prodData.name}`);
 
-      products.push({ productId: prod._id, qty: item.qty, price: prod.price });
-      totalAmount += prod.price * item.qty;
+      products.push({ productId: prod.getId(), qty: item.qty, price: prodData.price });
+      totalAmount += prodData.price * item.qty;
     }
 
+    const addressData = address.getData();
+    
     // Create order with shipping address
     const order = await Order.create({
       storeId,
       products,
       totalAmount,
       shippingAddress: {
-        fullName: address.fullName,
-        phone: address.phone,
-        addressLine1: address.addressLine1,
-        addressLine2: address.addressLine2,
-        city: address.city,
-        state: address.state,
-        zipCode: address.zipCode,
-        country: address.country,
+        fullName: addressData.fullName,
+        phone: addressData.phone,
+        addressLine1: addressData.addressLine1,
+        addressLine2: addressData.addressLine2,
+        city: addressData.city,
+        state: addressData.state,
+        zipCode: addressData.zipCode,
+        country: addressData.country,
       },
       status: "pending",
       paymentStatus: "pending",
@@ -72,13 +71,15 @@ const createOrderFromCart = async (req, res) => {
 
     // Update product quantities
     for (const p of products) {
-      await Product.findByIdAndUpdate(p.productId, { $inc: { qty: -p.qty } });
+      const product = await Product.findOne({ id: p.productId });
+      const currentQty = product.getData().qty;
+      await product.update({ qty: currentQty - p.qty });
     }
 
     // Clear cart
-    await Cart.findOneAndDelete({ storeId });
+    await Cart.destroy({ where: { storeId } });
 
-    return successResponse(res, 201, "Order created successfully", order);
+    return successResponse(res, 201, "Order created successfully", formatDoc(order));
 
   } catch (error) {
     console.error("[CREATE ORDER ERROR]:", error);
@@ -95,42 +96,86 @@ const getStoreOrders = async (req, res) => {
 
     const storeId = req.user.id;
 
-    const orders = await Order.find({ storeId })
-      .sort({ createdAt: -1 })
-      .populate("products.productId")
-      .populate("paymentId");
+    const orders = await Order.findAll({ where: { storeId } });
+    
+    // Sort by creation date
+    const sortedOrders = formatDocs(orders).sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    );
 
-    return successResponse(res, 200, "Orders fetched successfully", orders);
+    // Populate products
+    const populatedOrders = await Promise.all(
+      sortedOrders.map(async (order) => {
+        const populatedProducts = await Promise.all(
+          order.products.map(async (item) => {
+            const product = await Product.findOne({ id: item.productId });
+            return {
+              ...item,
+              productId: product ? formatDoc(product) : item.productId
+            };
+          })
+        );
+        return { ...order, products: populatedProducts };
+      })
+    );
 
+    return successResponse(res, 200, "Store orders fetched", populatedOrders);
   } catch (error) {
-    console.error("[FETCH STORE ORDERS ERROR]:", error);
+    console.error("[GET STORE ORDERS ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
   }
 };
 
 
-// ================= GET ORDER BY ID ========================
+// ================= GET ALL ORDERS (ADMIN) =================
+const getAllOrders = async (req, res) => {
+  try {
+    if (req.role !== "admin") 
+      return errorResponse(res, 403, "Only admin can view all orders");
+
+    const orders = await Order.findAll();
+    
+    const sortedOrders = formatDocs(orders).sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    return successResponse(res, 200, "All orders fetched", sortedOrders);
+  } catch (error) {
+    console.error("[GET ALL ORDERS ERROR]:", error);
+    return errorResponse(res, 500, "Internal server error");
+  }
+};
+
+
+// ================= GET ORDER BY ID =======================
 const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const order = await Order.findById(id)
-      .populate("products.productId")
-      .populate("storeId")
-      .populate("paymentId")
-      .populate("confirmedBy cancelledBy", "name email");
+    const order = await Order.findOne({ id });
+    if (!order) return errorResponse(res, 404, "Order not found");
 
-    if (!order) {
-      return errorResponse(res, 404, "Order not found");
-    }
+    const orderData = formatDoc(order);
 
     // Check authorization
-    if (req.role === "store" && !order.storeId._id.equals(req.user.id)) {
+    if (req.role === "store" && orderData.storeId !== req.user.id) {
       return errorResponse(res, 403, "Not authorized to view this order");
     }
 
-    return successResponse(res, 200, "Order fetched successfully", order);
+    // Populate products
+    const populatedProducts = await Promise.all(
+      orderData.products.map(async (item) => {
+        const product = await Product.findOne({ id: item.productId });
+        return {
+          ...item,
+          productId: product ? formatDoc(product) : item.productId
+        };
+      })
+    );
 
+    orderData.products = populatedProducts;
+
+    return successResponse(res, 200, "Order fetched successfully", orderData);
   } catch (error) {
     console.error("[GET ORDER ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
@@ -138,213 +183,97 @@ const getOrderById = async (req, res) => {
 };
 
 
-// ================= ADMIN: GET ALL ORDERS ===================
-const getAllOrders = async (req, res) => {
+// ================= UPDATE ORDER STATUS (ADMIN) ===========
+const updateOrderStatus = async (req, res) => {
   try {
     if (req.role !== "admin") 
-      return errorResponse(res, 403, "Only admin can view all orders");
+      return errorResponse(res, 403, "Only admin can update order status");
 
-    const { status, paymentStatus, shippingStatus, storeId } = req.query;
-    const filter = {};
+    const { id } = req.params;
+    const { status } = req.body;
 
-    if (status) filter.status = status;
-    if (paymentStatus) filter.paymentStatus = paymentStatus;
-    if (shippingStatus) filter.shippingStatus = shippingStatus;
-    if (storeId) filter.storeId = storeId;
+    if (!status) return errorResponse(res, 400, "Status is required");
 
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 })
-      .populate("products.productId")
-      .populate("storeId", "name email location")
-      .populate("paymentId")
-      .populate("confirmedBy cancelledBy", "name email");
+    const order = await Order.findOne({ id });
+    if (!order) return errorResponse(res, 404, "Order not found");
 
-    return successResponse(res, 200, "All orders fetched successfully", orders);
+    await order.update({ status });
 
+    const updated = await Order.findOne({ id });
+    return successResponse(res, 200, "Order status updated", formatDoc(updated));
   } catch (error) {
-    console.error("[ADMIN GET ORDERS ERROR]:", error);
+    console.error("[UPDATE ORDER STATUS ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
   }
 };
 
 
-// ================= ADMIN: CONFIRM ORDER ====================
-const confirmOrder = async (req, res) => {
+// ================= UPDATE PAYMENT STATUS (ADMIN) =========
+const updatePaymentStatus = async (req, res) => {
   try {
     if (req.role !== "admin") 
-      return errorResponse(res, 403, "Only admin can confirm orders");
+      return errorResponse(res, 403, "Only admin can update payment status");
 
     const { id } = req.params;
+    const { paymentStatus } = req.body;
 
-    const order = await Order.findById(id);
-    if (!order) {
-      return errorResponse(res, 404, "Order not found");
-    }
+    if (!paymentStatus) return errorResponse(res, 400, "Payment status is required");
 
-    if (order.status !== "pending") {
-      return errorResponse(res, 400, "Only pending orders can be confirmed");
-    }
+    const order = await Order.findOne({ id });
+    if (!order) return errorResponse(res, 404, "Order not found");
 
-    order.status = "confirmed";
-    order.confirmedBy = req.user._id;
-    order.confirmedAt = new Date();
-    await order.save();
+    await order.update({ paymentStatus });
 
-    // Create payment record
-    const payment = await Payment.create({
-      orderId: order._id,
-      amount: order.totalAmount,
-      paymentMethod: "qr_code",
-      status: "pending",
-      qrCodeUrl: process.env.PAYMENT_QR_URL || "https://example.com/qr-code.png",
-    });
-
-    order.paymentId = payment._id;
-    await order.save();
-
-    const updatedOrder = await Order.findById(id)
-      .populate("products.productId")
-      .populate("storeId")
-      .populate("paymentId")
-      .populate("confirmedBy", "name email");
-
-    return successResponse(res, 200, "Order confirmed successfully", updatedOrder);
-
+    const updated = await Order.findOne({ id });
+    return successResponse(res, 200, "Payment status updated", formatDoc(updated));
   } catch (error) {
-    console.error("[CONFIRM ORDER ERROR]:", error);
+    console.error("[UPDATE PAYMENT STATUS ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
   }
 };
 
 
-// ================= ADMIN: CANCEL ORDER =====================
-const cancelOrder = async (req, res) => {
+// ================= UPDATE SHIPPING STATUS (ADMIN) ========
+const updateShippingStatus = async (req, res) => {
   try {
     if (req.role !== "admin") 
-      return errorResponse(res, 403, "Only admin can cancel orders");
+      return errorResponse(res, 403, "Only admin can update shipping status");
 
     const { id } = req.params;
-    const { reason } = req.body;
+    const { shippingStatus } = req.body;
 
-    const order = await Order.findById(id);
-    if (!order) {
-      return errorResponse(res, 404, "Order not found");
-    }
+    if (!shippingStatus) return errorResponse(res, 400, "Shipping status is required");
 
-    if (order.status === "cancelled") {
-      return errorResponse(res, 400, "Order already cancelled");
-    }
+    const order = await Order.findOne({ id });
+    if (!order) return errorResponse(res, 404, "Order not found");
 
-    if (order.status === "completed") {
-      return errorResponse(res, 400, "Cannot cancel completed order");
-    }
+    await order.update({ shippingStatus });
 
-    // Restore product quantities
-    for (const item of order.products) {
-      await Product.findByIdAndUpdate(item.productId, { $inc: { qty: item.qty } });
-    }
-
-    order.status = "cancelled";
-    order.cancelledBy = req.user._id;
-    order.cancelledAt = new Date();
-    order.cancellationReason = reason || "Cancelled by admin";
-    await order.save();
-
-    const updatedOrder = await Order.findById(id)
-      .populate("products.productId")
-      .populate("storeId")
-      .populate("cancelledBy", "name email");
-
-    return successResponse(res, 200, "Order cancelled successfully", updatedOrder);
-
+    const updated = await Order.findOne({ id });
+    return successResponse(res, 200, "Shipping status updated", formatDoc(updated));
   } catch (error) {
-    console.error("[CANCEL ORDER ERROR]:", error);
+    console.error("[UPDATE SHIPPING STATUS ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
   }
 };
 
 
-// ================= ADMIN: MARK AS SHIPPED ==================
-const markAsShipped = async (req, res) => {
+// ================= DELETE ORDER (ADMIN) ==================
+const deleteOrder = async (req, res) => {
   try {
     if (req.role !== "admin") 
-      return errorResponse(res, 403, "Only admin can mark orders as shipped");
+      return errorResponse(res, 403, "Only admin can delete orders");
 
     const { id } = req.params;
 
-    const order = await Order.findById(id);
-    if (!order) {
-      return errorResponse(res, 404, "Order not found");
-    }
+    const order = await Order.findOne({ id });
+    if (!order) return errorResponse(res, 404, "Order not found");
 
-    if (order.paymentStatus !== "verified") {
-      return errorResponse(res, 400, "Payment must be verified before shipping");
-    }
+    await Order.destroy({ id });
 
-    if (order.shippingStatus === "shipped" || order.shippingStatus === "delivered") {
-      return errorResponse(res, 400, "Order already shipped");
-    }
-
-    order.shippingStatus = "shipped";
-    order.shippedAt = new Date();
-    await order.save();
-
-    const updatedOrder = await Order.findById(id)
-      .populate("products.productId")
-      .populate("storeId")
-      .populate("paymentId");
-
-    return successResponse(res, 200, "Order marked as shipped", updatedOrder);
-
+    return successResponse(res, 200, "Order deleted successfully");
   } catch (error) {
-    console.error("[MARK SHIPPED ERROR]:", error);
-    return errorResponse(res, 500, "Internal server error");
-  }
-};
-
-
-// ================= STORE: CONFIRM ORDER RECEIVED ===========
-const confirmOrderReceived = async (req, res) => {
-  try {
-    if (req.role !== "store") 
-      return errorResponse(res, 403, "Only store users can confirm order received");
-
-    const { id } = req.params;
-    const storeId = req.user.id;
-
-    const order = await Order.findById(id);
-    if (!order) {
-      return errorResponse(res, 404, "Order not found");
-    }
-
-    if (!order.storeId.equals(storeId)) {
-      return errorResponse(res, 403, "Not authorized to update this order");
-    }
-
-    if (order.shippingStatus !== "shipped") {
-      return errorResponse(res, 400, "Order must be shipped before confirming receipt");
-    }
-
-    if (order.orderReceivedConfirmation) {
-      return errorResponse(res, 400, "Order receipt already confirmed");
-    }
-
-    order.shippingStatus = "delivered";
-    order.deliveredAt = new Date();
-    order.orderReceivedConfirmation = true;
-    order.orderReceivedAt = new Date();
-    order.status = "completed";
-    await order.save();
-
-    const updatedOrder = await Order.findById(id)
-      .populate("products.productId")
-      .populate("storeId")
-      .populate("paymentId");
-
-    return successResponse(res, 200, "Order received confirmed", updatedOrder);
-
-  } catch (error) {
-    console.error("[CONFIRM RECEIVED ERROR]:", error);
+    console.error("[DELETE ORDER ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
   }
 };
@@ -353,10 +282,10 @@ const confirmOrderReceived = async (req, res) => {
 module.exports = {
   createOrderFromCart,
   getStoreOrders,
-  getOrderById,
   getAllOrders,
-  confirmOrder,
-  cancelOrder,
-  markAsShipped,
-  confirmOrderReceived,
+  getOrderById,
+  updateOrderStatus,
+  updatePaymentStatus,
+  updateShippingStatus,
+  deleteOrder,
 };

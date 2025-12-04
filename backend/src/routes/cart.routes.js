@@ -5,7 +5,7 @@ const {
   addToCart,
   getCart,
   updateCartItem,
-  removeCartItem,
+  removeFromCart,
   clearCart,
 } = require("../controllers/cart.controller.js");
 
@@ -17,7 +17,7 @@ router.use(auth, authorizeRoles("store"));
 router.post("/", addToCart); // add or increment
 router.get("/", getCart);
 router.put("/", updateCartItem);
-router.delete("/item/:productId", removeCartItem);
+router.delete("/item/:productId", removeFromCart);
 router.delete("/", clearCart);
 
 module.exports = router;

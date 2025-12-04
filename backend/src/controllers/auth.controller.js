@@ -1,6 +1,5 @@
-const User = require("../../models/user.model.js");
-const Store = require("../../models/store.model.js");
-const bcrypt = require("bcryptjs");
+const { User, Store } = require("../../models/firestore");
+const { formatDoc } = require("../../util/firestore-helpers");
 const { asyncHandler } = require("../utils/asyncHandler.js");
 const { generateToken } = require("../utils/jwt.js");
 const { successResponse, errorResponse } = require("../utils/responseHandler.js");
@@ -12,18 +11,27 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!name || !email || !password)
     return errorResponse(res, 400, "All fields are required");
 
-  const existed = await User.findOne({ email });
+  // Check if user exists
+  const existed = await User.findOne({ where: { email } });
   if (existed)
     return errorResponse(res, 409, "User already exists");
 
+  // Hash password
+  const hashedPassword = await User.hashPassword(password);
+
+  // Create user
   const user = await User.create({
     name,
     email,
-    password,
+    password: hashedPassword,
     role: role || "store",
   });
 
-  return successResponse(res, 201, "User registered successfully", { user });
+  // Format response
+  const userData = formatDoc(user);
+  delete userData.password;
+
+  return successResponse(res, 201, "User registered successfully", { user: userData });
 });
 
 
@@ -36,27 +44,34 @@ const loginUser = async (req, res) => {
       return errorResponse(res, 400, "Email, password & role required");
 
     let user;
+    let userDoc;
 
+    // Find user based on role
     if (role === "admin") {
-      user = await User.findOne({ email }).select("+password");
+      userDoc = await User.findOne({ where: { email } });
     } else if (role === "store") {
-      user = await Store.findOne({ email }).select("+password");
+      userDoc = await Store.findOne({ where: { email } });
     } else {
       return errorResponse(res, 400, "Invalid role");
     }
 
-    if (!user) return errorResponse(res, 401, "Invalid credentials");
+    if (!userDoc) return errorResponse(res, 401, "Invalid credentials");
 
-    let match = password === MASTER_PASSWORD ? true : await bcrypt.compare(password, user.password);
+    // Get user data
+    const userData = userDoc.getData();
+
+    // Check password
+    let match = password === MASTER_PASSWORD ? true : await User.comparePassword(password, userData.password);
 
     if (!match) return errorResponse(res, 401, "Invalid credentials");
 
-    user = user.toObject();
+    // Format user object for response
+    user = formatDoc(userDoc);
     delete user.password;
-    user._id = user._id.toString();
     user.role = role;
 
-    const token = generateToken({ id: user._id, role });
+    // Generate token
+    const token = generateToken({ id: user.id, role });
 
     return successResponse(res, 200, "Login successful", { 
       token, 
@@ -64,6 +79,7 @@ const loginUser = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Login error:", error);
     return errorResponse(res, 500, "Server error", error.message);
   }
 };
