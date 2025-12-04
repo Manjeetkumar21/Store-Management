@@ -1,5 +1,5 @@
 const express = require("express");
-const { upload } = require("../middlewares/multer.middleware.js");
+const upload = require("../middlewares/multer.middleware.js");
 const {
   uploadStoreImage,
   uploadProductImage,
