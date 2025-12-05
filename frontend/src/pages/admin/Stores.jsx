@@ -180,7 +180,7 @@ export const Stores = () => {
   }
 
   const handleViewStore = (store) => {
-    navigate(`/admin/stores/${store._id}`)
+    navigate(`/admin/stores/${store.id}`)
   }
 
   const handleEditStore = (store) => {
@@ -191,7 +191,7 @@ export const Stores = () => {
       email: store.email,
       password: "",
       location: store.location,
-      companyId: store.companyId?._id || "",
+      companyId: store.companyId?.id || "",
       landingPage: store.landingPage || {
         hero: { heading: "", subheading: "", heroImage: "" },
         navbar: { logoImage: "" },
@@ -215,8 +215,8 @@ export const Stores = () => {
 
     setIsProcessing(true)
     try {
-      await axiosInstance.delete(`/store/${storeToDelete._id}`)
-      dispatch(deleteStore(storeToDelete._id))
+      await axiosInstance.delete(`/store/${storeToDelete.id}`)
+      dispatch(deleteStore(storeToDelete.id))
       toast.success("Store deleted successfully!")
       setDeleteModalOpen(false)
       setStoreToDelete(null)
@@ -272,7 +272,7 @@ export const Stores = () => {
         if (!updateData.password) {
           delete updateData.password
         }
-        const response = await axiosInstance.put(`/store/${selectedStore._id}`, updateData)
+        const response = await axiosInstance.put(`/store/${selectedStore.id}`, updateData)
         dispatch(updateStore(response.data.data))
         toast.success("Store updated successfully!")
       } else {
@@ -339,7 +339,7 @@ export const Stores = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {stores.map((store) => (
               <StoreCard
-                key={store._id}
+                key={store.id}
                 store={store}
                 onView={handleViewStore}
                 onEdit={handleEditStore}
@@ -405,7 +405,7 @@ export const Stores = () => {
             >
               <option value="">Select a company</option>
               {companies.map((company) => (
-                <option key={company._id} value={company._id}>
+                <option key={company.id} value={company.id}>
                   {company.name}
                 </option>
               ))}

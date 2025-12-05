@@ -1,5 +1,7 @@
 /** @type {import('firebase-admin')} */
 let admin
+const { v4: uuidv4 } = require('uuid');
+
 const initializeApp = (_admin) => {
   admin = _admin
 }
@@ -50,6 +52,7 @@ const DataTypes = {
   BOOLEAN: 'boolean',
   OBJECT: 'object',
   ARRAY: 'array',
+  TIMESTAMP: 'timestamp',
 }
 
 /**
@@ -481,7 +484,7 @@ function defineModel(name, attributes, options = {}) {
     constructor(model, opts) {
       /** @private */
       this[ID_SYMBOL] = opts.id
-      this[DATA_SYMBOL] = Model.formatData(model)
+      this[DATA_SYMBOL] = Model.formatData(model, opts.id)
       /** @private */
       this.parentPath = opts.parentPath
     }
@@ -649,18 +652,30 @@ function defineModel(name, attributes, options = {}) {
   }
   /**
    * @param {OptionalProps<TAttrs>} model
+   * @param {string} [id] - Optional document ID to include in the data
    * @return {Props<TAttrs>}
    */
-  Model.formatData = function (model) {
+  Model.formatData = function (model, id) {
     const ret = {}
     for (const key in normalized_attributes) {
       if (typeof model[key] != 'undefined') {
         ret[key] = model[key]
       } else {
-        const defaultValue = normalized_attributes[key].default
-        // If default is a function, call it to get the actual value
-        ret[key] = typeof defaultValue === 'function' ? defaultValue() : defaultValue
+        const attr = normalized_attributes[key]
+        // Handle TIMESTAMP type with Firebase FieldValue.serverTimestamp()
+        if (attr.type === 'timestamp') {
+          ret[key] = admin.firestore.FieldValue.serverTimestamp()
+        } else {
+          const defaultValue = attr.default
+          // If default is a function, call it to get the actual value
+          ret[key] = typeof defaultValue === 'function' ? defaultValue() : defaultValue
+        }
       }
+    }
+    // Include id in the data if schema has id field
+    if (normalized_attributes.id) {
+      // Use provided id, or generate a new UUID if not provided
+      ret.id = id || uuidv4()
     }
     return ret
   }
@@ -675,6 +690,10 @@ function defineModel(name, attributes, options = {}) {
         ret[key] = model[key]
       }
     }
+    // Automatically set updatedAt to server timestamp if it's a TIMESTAMP field
+    if (normalized_attributes.updatedAt && normalized_attributes.updatedAt.type === 'timestamp') {
+      ret.updatedAt = admin.firestore.FieldValue.serverTimestamp()
+    }
     return ret
   }
   /**
@@ -683,10 +702,24 @@ function defineModel(name, attributes, options = {}) {
    */
   Model.create = function (model, opts = {}) {
     const collection = admin.firestore().collection(Model.path(opts.parentPath))
+    
+    // If id is provided in opts, use it
     if (typeof opts.id != 'undefined') {
-      return collection.doc(opts.id).set(Model.formatData(model)).then(() => new Model(model, opts))
+      const data = Model.formatData(model, opts.id)
+      return collection.doc(opts.id).set(data).then(() => new Model(model, opts))
     }
-    return collection.add(Model.formatData(model)).then(res => new Model(model, { ...opts, id: res.id }))
+    
+    // Generate data (which will include a UUID for id if schema has it)
+    const data = Model.formatData(model)
+    
+    // If schema has id field, use the generated UUID as the document ID
+    if (normalized_attributes.id && data.id) {
+      const docId = data.id
+      return collection.doc(docId).set(data).then(() => new Model(model, { ...opts, id: docId }))
+    }
+    
+    // Fallback to Firestore auto-generated ID if no id field in schema
+    return collection.add(data).then(res => new Model(model, { ...opts, id: res.id }))
   }
   /**
    * @param {UpdateProps<TAttrs>} model 

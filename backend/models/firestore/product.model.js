@@ -1,6 +1,7 @@
 const { defineModel, DataTypes } = require('../../util/firesequelize');
 
 const Product = defineModel('products', {
+  id: { type: DataTypes.STRING },
   storeId: { type: DataTypes.STRING, required: true },
   name: { type: DataTypes.STRING, required: true },
   price: { type: DataTypes.NUMBER, required: true },
@@ -9,8 +10,8 @@ const Product = defineModel('products', {
   image: { type: DataTypes.STRING, default: '' },
   description: { type: DataTypes.STRING, default: '' },
   category: { type: DataTypes.STRING, default: '' },
-  createdAt: { type: DataTypes.NUMBER, default: () => Date.now() },
-  updatedAt: { type: DataTypes.NUMBER, default: () => Date.now() }
+  createdAt: { type: DataTypes.TIMESTAMP },
+  updatedAt: { type: DataTypes.TIMESTAMP }
 });
 
 module.exports = Product;

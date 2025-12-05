@@ -57,12 +57,12 @@ export const StoreDashboard = () => {
         }
     }
 
-    // Dependency FIX: Run useEffect when the user object (and thus user._id) becomes available
+    // Dependency FIX: Run useEffect when the user object (and thus user.id) becomes available
     useEffect(() => {
-        if (user?._id) {
-            fetchStats(user._id)
+        if (user?.id) {
+            fetchStats(user.id)
         }
-    }, [user?._id])
+    }, [user?.id])
 
     const LoadingState = () => (
         <div className="text-center py-12 flex flex-col items-center justify-center bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -77,7 +77,7 @@ export const StoreDashboard = () => {
             <h2 className="text-xl font-semibold text-red-700 mt-4">Error Loading Dashboard</h2>
             <p className="text-red-600 mt-2">{error}</p>
             <button
-                onClick={() => fetchStats(user?._id)}
+                onClick={() => fetchStats(user?.id)}
                 className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150"
             >
                 Try Again
@@ -142,12 +142,12 @@ export const StoreDashboard = () => {
                                 {stats.recentOrders.length > 0 ? (
                                     stats.recentOrders.map((order) => (
                                         <div
-                                            key={order._id}
-                                            onClick={() => navigate(`/store/orders/${order._id}`)}
+                                            key={order.id}
+                                            onClick={() => navigate(`/store/orders/${order.id}`)}
                                             className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-all cursor-pointer group"
                                         >
                                             <div>
-                                                <p className="font-medium text-gray-900 group-hover:text-blue-600">Order **#{order._id.slice(-6)}**</p>
+                                                <p className="font-medium text-gray-900 group-hover:text-blue-600">Order **#{order.id.slice(-6)}**</p>
                                                 <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
                                             </div>
                                             <div className="text-right flex items-center gap-2">
