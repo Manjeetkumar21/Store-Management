@@ -1,31 +1,48 @@
-const Company = require("../../models/company.model.js");
-const Store = require("../../models/store.model.js");
-const Product = require("../../models/product.model.js");
-const Order = require("../../models/order.model.js");
+const { Company, Store, Product, Order } = require("../../models/firestore");
+const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler");
 
 // ===================== ADMIN DASHBOARD =====================
 const getAdminStats = async (req, res) => {
   try {
-    const [totalCompanies, totalStores, totalProducts, totalOrders] =
-      await Promise.all([
-        Company.countDocuments(),
-        Store.countDocuments(),
-        Product.countDocuments(),
-        Order.countDocuments(),
-      ]);
-
-    const revenueData = await Order.aggregate([
-      { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } },
+    const [companies, stores, products, orders] = await Promise.all([
+      Company.findAll(),
+      Store.findAll(),
+      Product.findAll(),
+      Order.findAll(),
     ]);
 
-    const revenue = revenueData[0]?.totalRevenue || 0;
+    const totalCompanies = companies.length;
+    const totalStores = stores.length;
+    const totalProducts = products.length;
+    const totalOrders = orders.length;
 
-    const recentOrders = await Order.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .populate('storeId', 'name')
-      .select("-__v");
+    // Calculate total revenue
+    const revenue = orders.reduce((sum, order) => {
+      const orderData = order.getData();
+      return sum + (orderData.totalAmount || 0);
+    }, 0);
+
+    // Get recent orders (last 10)
+    const sortedOrders = formatDocs(orders).sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    ).slice(0, 10);
+
+    // Populate store names for recent orders
+    const recentOrders = await Promise.all(
+      sortedOrders.map(async (order) => {
+        if (order.storeId) {
+          const store = await Store.findOne({ id: order.storeId });
+          if (store) {
+            order.storeId = {
+              id: store.getId(),
+              name: store.getData().name
+            };
+          }
+        }
+        return order;
+      })
+    );
 
     return successResponse(res, 200, "Admin dashboard stats fetched", {
       totalCompanies,
@@ -53,22 +70,24 @@ const getStoreStats = async (req, res) => {
       });
     }
 
-    const [storeProducts, storeOrders] = await Promise.all([
-      Product.countDocuments({ store: storeId }),
-      Order.countDocuments({ store: storeId }),
+    const [products, orders] = await Promise.all([
+      Product.findAll({ where: { storeId } }),
+      Order.findAll({ where: { storeId } }),
     ]);
 
-    const revenueData = await Order.aggregate([
-      { $match: { store: storeId } },
-      { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } },
-    ]);
+    const storeProducts = products.length;
+    const storeOrders = orders.length;
 
-    const totalSales = revenueData[0]?.totalRevenue || 0;
+    // Calculate total sales
+    const totalSales = orders.reduce((sum, order) => {
+      const orderData = order.getData();
+      return sum + (orderData.totalAmount || 0);
+    }, 0);
 
-    const recentOrders = await Order.find({ store: storeId })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select("-__v");
+    // Get recent orders (last 10)
+    const recentOrders = formatDocs(orders)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10);
 
     return successResponse(res, 200, "Store dashboard stats fetched", {
       storeProducts,

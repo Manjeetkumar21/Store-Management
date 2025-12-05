@@ -25,11 +25,11 @@ app.use(cors({ origin: "*", credentials: true }));
 connectDB();
 
 app.get("/", (req, res) => {
-  res.json({ message: "Store Management Backend Running" });
+  res.json({ message: "Store Management Backend Running newww" });
 });
 
 app.get("/health", (req, res) => {
-  res.json({ message: "Health Check" });
+  res.json({ message: "Health Check new........................" });
 });
 
 

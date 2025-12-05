@@ -1,6 +1,6 @@
-const cloudinary = require("../utils/cloudinary.js");
-const Store = require("../../models/store.model.js");
-const Product = require("../../models/product.model.js");
+const { uploadFile, deleteFile } = require("../../util/firebase-storage");
+const { Store, Product } = require("../../models/firestore");
+const { formatDoc } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
 // ===================== UPLOAD STORE IMAGE =====================
@@ -12,25 +12,34 @@ const uploadStoreImage = async (req, res) => {
   if (!file) return errorResponse(res, 400, "No file uploaded");
 
   try {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: "stores" },
-      async (error, result) => {
-        if (error) return errorResponse(res, 500, "Upload failed", error.message);
+    const store = await Store.findOne({ id: storeId });
+    if (!store) return errorResponse(res, 404, "Store not found");
 
-        const store = await Store.findByIdAndUpdate(
-          storeId,
-          { image: result.secure_url },
-          { new: true }
-        );
+    const oldImage = store.getData().image;
 
-        if (!store) return errorResponse(res, 404, "Store not found");
-
-        return successResponse(res, 200, "Store image updated", store);
-      }
+    // Upload new image to Firebase Storage
+    const imageUrl = await uploadFile(
+      file.buffer,
+      file.originalname,
+      'stores',
+      file.mimetype
     );
 
-    uploadStream.end(file.buffer);
+    // Update store with new image URL
+    await store.update({ image: imageUrl });
 
+    // Delete old image if exists
+    if (oldImage) {
+      await deleteFile(oldImage).catch(err => 
+        console.warn('Failed to delete old image:', err)
+      );
+    }
+
+    const updatedStore = await Store.findOne({ id: storeId });
+    const storeData = formatDoc(updatedStore);
+    delete storeData.password;
+
+    return successResponse(res, 200, "Store image updated", storeData);
   } catch (err) {
     return errorResponse(res, 500, "Image upload failed", err.message);
   }
@@ -45,25 +54,31 @@ const uploadProductImage = async (req, res) => {
   if (!file) return errorResponse(res, 400, "No file uploaded");
 
   try {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: "products" },
-      async (error, result) => {
-        if (error) return errorResponse(res, 500, "Upload failed", error.message);
+    const product = await Product.findOne({ id: productId });
+    if (!product) return errorResponse(res, 404, "Product not found");
 
-        const product = await Product.findByIdAndUpdate(
-          productId,
-          { image: result.secure_url },
-          { new: true }
-        );
+    const oldImage = product.getData().image;
 
-        if (!product) return errorResponse(res, 404, "Product not found");
-
-        return successResponse(res, 200, "Product image uploaded", product);
-      }
+    // Upload new image to Firebase Storage
+    const imageUrl = await uploadFile(
+      file.buffer,
+      file.originalname,
+      'products',
+      file.mimetype
     );
 
-    uploadStream.end(file.buffer);
+    // Update product with new image URL
+    await product.update({ image: imageUrl });
 
+    // Delete old image if exists
+    if (oldImage) {
+      await deleteFile(oldImage).catch(err => 
+        console.warn('Failed to delete old image:', err)
+      );
+    }
+
+    const updatedProduct = await Product.findOne({ id: productId });
+    return successResponse(res, 200, "Product image uploaded", formatDoc(updatedProduct));
   } catch (err) {
     return errorResponse(res, 500, "Image upload failed", err.message);
   }

@@ -1,32 +1,40 @@
-const Cart = require("../../models/cart.model.js");
-const Product = require("../../models/product.model.js");
+const { Cart, Product } = require("../../models/firestore");
+const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 
 const addToCart = async (req, res) => {
   try {
     if (req.user.role !== "store")
       return res.status(403).json({ status: false, message: "Only store can access cart" });
 
-    const storeId = req.user._id;
+    const storeId = req.user.id;
     const { productId, qty = 1 } = req.body;
 
     if (!productId) return res.status(400).json({ status: false, message: "productId required" });
 
-    const product = await Product.findById(productId);
+    const product = await Product.findOne({ id: productId });
     if (!product) return res.status(404).json({ status: false, message: "Product not found" });
 
-    if (!product.storeId.equals(storeId))
+    if (product.getData().storeId !== storeId)
       return res.status(403).json({ status: false, message: "Product belongs to another store" });
 
-    let cart = await Cart.findOne({ storeId });
-    if (!cart) cart = await Cart.create({ storeId, items: [] });
+    let cart = await Cart.findOne({ where: { storeId } });
+    if (!cart) {
+      cart = await Cart.create({ storeId, items: [] });
+    }
 
-    const existing = cart.items.find(i => i.productId.equals(productId));
-    existing ? existing.qty += qty : cart.items.push({ productId, qty, price: product.price });
+    const cartData = cart.getData();
+    const existing = cartData.items.find(i => i.productId === productId);
+    
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      cartData.items.push({ productId, qty, price: product.getData().price });
+    }
 
-    cart.updatedAt = Date.now();
-    await cart.save();
+    await cart.update({ items: cartData.items, updatedAt: Date.now() });
 
-    return res.status(200).json({ status: true, message: "Item added", cart });
+    const updatedCart = await Cart.findOne({ where: { storeId } });
+    return res.status(200).json({ status: true, message: "Item added", cart: formatDoc(updatedCart) });
   } catch (err) {
     console.error("ADD_CART_ERROR:", err);
     return res.status(500).json({ status: false, message: "Server error" });
@@ -39,10 +47,29 @@ const getCart = async (req, res) => {
     if (req.user.role !== "store")
       return res.status(403).json({ status: false, message: "Only store can access cart" });
 
-    const storeId = req.user._id;
-    const cart = await Cart.findOne({ storeId }).populate("items.productId");
+    const storeId = req.user.id;
+    const cart = await Cart.findOne({ where: { storeId } });
 
-    return res.status(200).json({ status: true, message: "Cart fetched", cart: cart || { items: [] } });
+    if (!cart) {
+      return res.status(200).json({ status: true, message: "Cart fetched", cart: { items: [] } });
+    }
+
+    const cartData = formatDoc(cart);
+    
+    // Populate products
+    const populatedItems = await Promise.all(
+      cartData.items.map(async (item) => {
+        const product = await Product.findOne({ id: item.productId });
+        return {
+          ...item,
+          productId: product ? formatDoc(product) : item.productId
+        };
+      })
+    );
+
+    cartData.items = populatedItems;
+
+    return res.status(200).json({ status: true, message: "Cart fetched", cart: cartData });
   } catch (err) {
     console.error("GET_CART_ERROR:", err);
     return res.status(500).json({ status: false, message: "Server error" });
@@ -55,27 +82,29 @@ const updateCartItem = async (req, res) => {
     if (req.user.role !== "store")
       return res.status(403).json({ status: false, message: "Only store can access cart" });
 
-    const storeId = req.user._id;
+    const storeId = req.user.id;
     const { productId, qty } = req.body;
 
     if (!productId || qty == null)
       return res.status(400).json({ status: false, message: "productId & qty required" });
 
-    const cart = await Cart.findOne({ storeId });
+    const cart = await Cart.findOne({ where: { storeId } });
     if (!cart) return res.status(404).json({ status: false, message: "Cart not found" });
 
-    const item = cart.items.find(i => i.productId.equals(productId));
+    const cartData = cart.getData();
+    const item = cartData.items.find(i => i.productId === productId);
     if (!item) return res.status(404).json({ status: false, message: "Item not found" });
 
-    if (qty <= 0)
-      cart.items = cart.items.filter(i => !i.productId.equals(productId));
-    else
+    if (qty <= 0) {
+      cartData.items = cartData.items.filter(i => i.productId !== productId);
+    } else {
       item.qty = qty;
+    }
 
-    cart.updatedAt = Date.now();
-    await cart.save();
+    await cart.update({ items: cartData.items, updatedAt: Date.now() });
 
-    return res.status(200).json({ status: true, message: "Cart updated", cart });
+    const updatedCart = await Cart.findOne({ where: { storeId } });
+    return res.status(200).json({ status: true, message: "Cart updated", cart: formatDoc(updatedCart) });
   } catch (err) {
     console.error("UPDATE_CART_ERROR:", err);
     return res.status(500).json({ status: false, message: "Server error" });
@@ -83,24 +112,28 @@ const updateCartItem = async (req, res) => {
 };
 
 
-const removeCartItem = async (req, res) => {
+const removeFromCart = async (req, res) => {
   try {
     if (req.user.role !== "store")
       return res.status(403).json({ status: false, message: "Only store can access cart" });
 
-    const storeId = req.user._id;
-    const { productId } = req.params;
+    const storeId = req.user.id;
+    const { productId } = req.body;
 
-    const cart = await Cart.findOne({ storeId });
+    if (!productId) return res.status(400).json({ status: false, message: "productId required" });
+
+    const cart = await Cart.findOne({ where: { storeId } });
     if (!cart) return res.status(404).json({ status: false, message: "Cart not found" });
 
-    cart.items = cart.items.filter(i => !i.productId.equals(productId));
-    cart.updatedAt = Date.now();
-    await cart.save();
+    const cartData = cart.getData();
+    cartData.items = cartData.items.filter(i => i.productId !== productId);
 
-    return res.status(200).json({ status: true, message: "Item removed", cart });
+    await cart.update({ items: cartData.items, updatedAt: Date.now() });
+
+    const updatedCart = await Cart.findOne({ where: { storeId } });
+    return res.status(200).json({ status: true, message: "Item removed", cart: formatDoc(updatedCart) });
   } catch (err) {
-    console.error("REMOVE_ITEM_ERROR:", err);
+    console.error("REMOVE_CART_ERROR:", err);
     return res.status(500).json({ status: false, message: "Server error" });
   }
 };
@@ -111,21 +144,18 @@ const clearCart = async (req, res) => {
     if (req.user.role !== "store")
       return res.status(403).json({ status: false, message: "Only store can access cart" });
 
-    const storeId = req.user._id;
-    await Cart.findOneAndDelete({ storeId });
+    const storeId = req.user.id;
+    const cart = await Cart.findOne({ where: { storeId } });
 
-    return res.status(200).json({ status: true, message: "Cart cleared" });
+    if (!cart) return res.status(404).json({ status: false, message: "Cart not found" });
+
+    await cart.update({ items: [], updatedAt: Date.now() });
+
+    return res.status(200).json({ status: true, message: "Cart cleared", cart: { items: [] } });
   } catch (err) {
     console.error("CLEAR_CART_ERROR:", err);
     return res.status(500).json({ status: false, message: "Server error" });
   }
 };
 
-
-module.exports = {
-  addToCart,
-  getCart,
-  updateCartItem,
-  removeCartItem,
-  clearCart,
-};
+module.exports = { addToCart, getCart, updateCartItem, removeFromCart, clearCart };

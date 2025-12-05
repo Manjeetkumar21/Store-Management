@@ -1,5 +1,5 @@
-const Product = require("../../models/product.model.js");
-const { asyncHandler } = require("../utils/asyncHandler.js");
+const { Product, Store } = require("../../models/firestore");
+const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
 // ================= CREATE PRODUCT (ADMIN) =================
@@ -22,7 +22,7 @@ const createProduct = async (req, res) => {
       image: image || "",
     });
 
-    return successResponse(res, 201, "Product created successfully", product);
+    return successResponse(res, 201, "Product created successfully", formatDoc(product));
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -32,8 +32,28 @@ const createProduct = async (req, res) => {
 // ================= GET ALL PRODUCTS =======================
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate("storeId", "name");
-    return successResponse(res, 200, "Products fetched successfully", products);
+    const products = await Product.findAll();
+    
+    // Populate store for each product
+    const productsData = await Promise.all(
+      products.map(async (product) => {
+        const productData = formatDoc(product);
+        
+        if (productData.storeId) {
+          const store = await Store.findOne({ id: productData.storeId });
+          if (store) {
+            productData.storeId = {
+              id: store.getId(),
+              name: store.getData().name
+            };
+          }
+        }
+        
+        return productData;
+      })
+    );
+    
+    return successResponse(res, 200, "Products fetched successfully", productsData);
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -45,10 +65,23 @@ const getProductById = async (req, res) => {
     const { id } = req.params;
     if (!id) return errorResponse(res, 400, "Product ID is required");
 
-    const product = await Product.findById(id).populate("storeId", "name");
+    const product = await Product.findOne({ id });
     if (!product) return errorResponse(res, 404, "Product not found");
 
-    return successResponse(res, 200, "Product fetched successfully", product);
+    const productData = formatDoc(product);
+    
+    // Populate store
+    if (productData.storeId) {
+      const store = await Store.findOne({ id: productData.storeId });
+      if (store) {
+        productData.storeId = {
+          id: store.getId(),
+          name: store.getData().name
+        };
+      }
+    }
+
+    return successResponse(res, 200, "Product fetched successfully", productData);
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -60,9 +93,26 @@ const getProductsByStore = async (req, res) => {
     const { storeId } = req.params;
     if (!storeId) return errorResponse(res, 400, "Store ID is required");
 
-    const products = await Product.find({ storeId }).populate("storeId", "name");
+    const products = await Product.findAll({ where: { storeId } });
+    
+    // Populate store for products
+    const productsData = await Promise.all(
+      products.map(async (product) => {
+        const productData = formatDoc(product);
+        
+        const store = await Store.findOne({ id: storeId });
+        if (store) {
+          productData.storeId = {
+            id: store.getId(),
+            name: store.getData().name
+          };
+        }
+        
+        return productData;
+      })
+    );
 
-    return successResponse(res, 200, "Products fetched successfully", products);
+    return successResponse(res, 200, "Products fetched successfully", productsData);
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -78,10 +128,13 @@ const updateProduct = async (req, res) => {
     if (!updates || Object.keys(updates).length === 0)
       return errorResponse(res, 400, "No fields provided to update");
 
-    const product = await Product.findByIdAndUpdate(id, updates, { new: true });
+    const product = await Product.findOne({ id });
     if (!product) return errorResponse(res, 404, "Product not found");
 
-    return successResponse(res, 200, "Product updated successfully", product);
+    await Product.update(updates, { id });
+
+    const updatedProduct = await Product.findOne({ id });
+    return successResponse(res, 200, "Product updated successfully", formatDoc(updatedProduct));
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -93,8 +146,10 @@ const deleteProduct = async (req, res) => {
     const { id } = req.params;
     if (!id) return errorResponse(res, 400, "Product ID is required");
 
-    const product = await Product.findByIdAndDelete(id);
+    const product = await Product.findOne({ id });
     if (!product) return errorResponse(res, 404, "Product not found");
+
+    await Product.destroy({ id });
 
     return successResponse(res, 200, "Product deleted successfully", {});
   } catch (error) {

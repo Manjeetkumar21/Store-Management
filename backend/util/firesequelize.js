@@ -654,7 +654,13 @@ function defineModel(name, attributes, options = {}) {
   Model.formatData = function (model) {
     const ret = {}
     for (const key in normalized_attributes) {
-      ret[key] = typeof model[key] != 'undefined' ? model[key] : normalized_attributes[key].default
+      if (typeof model[key] != 'undefined') {
+        ret[key] = model[key]
+      } else {
+        const defaultValue = normalized_attributes[key].default
+        // If default is a function, call it to get the actual value
+        ret[key] = typeof defaultValue === 'function' ? defaultValue() : defaultValue
+      }
     }
     return ret
   }

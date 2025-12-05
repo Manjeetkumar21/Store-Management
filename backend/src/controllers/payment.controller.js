@@ -1,5 +1,5 @@
-const Payment = require("../../models/payment.model");
-const Order = require("../../models/order.model");
+const { Payment, Order } = require("../../models/firestore");
+const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler");
 
 // INITIATE PAYMENT (Created when order is confirmed by admin)
@@ -11,34 +11,34 @@ const initiatePayment = async (req, res) => {
 
     const { orderId } = req.params;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ id: orderId });
     if (!order) {
       return errorResponse(res, 404, "Order not found");
     }
 
-    if (order.status !== "confirmed") {
+    const orderData = order.getData();
+    if (orderData.status !== "confirmed") {
       return errorResponse(res, 400, "Order must be confirmed before initiating payment");
     }
 
     // Check if payment already exists
-    const existingPayment = await Payment.findOne({ orderId });
+    const existingPayment = await Payment.findOne({ where: { orderId } });
     if (existingPayment) {
       return errorResponse(res, 400, "Payment already initiated for this order");
     }
 
     const payment = await Payment.create({
       orderId,
-      amount: order.totalAmount,
+      amount: orderData.totalAmount,
       paymentMethod: "qr_code",
       status: "pending",
       qrCodeUrl: process.env.PAYMENT_QR_URL || "https://example.com/qr-code.png",
     });
 
     // Update order with payment reference
-    order.paymentId = payment._id;
-    await order.save();
+    await order.update({ paymentId: payment.getId() });
 
-    return successResponse(res, 201, "Payment initiated successfully", payment);
+    return successResponse(res, 201, "Payment initiated successfully", formatDoc(payment));
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -49,20 +49,30 @@ const getPaymentByOrderId = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const payment = await Payment.findOne({ orderId }).populate("orderId verifiedBy");
+    const payment = await Payment.findOne({ where: { orderId } });
     if (!payment) {
       return errorResponse(res, 404, "Payment not found");
     }
 
+    const paymentData = formatDoc(payment);
+
+    // Populate order
+    if (paymentData.orderId) {
+      const order = await Order.findOne({ id: paymentData.orderId });
+      if (order) {
+        paymentData.orderId = formatDoc(order);
+      }
+    }
+
     // Check authorization
     if (req.role === "store") {
-      const order = await Order.findById(orderId);
-      if (!order || !order.storeId.equals(req.user.id)) {
+      const order = await Order.findOne({ id: orderId });
+      if (!order || order.getData().storeId !== req.user.id) {
         return errorResponse(res, 403, "Not authorized to view this payment");
       }
     }
 
-    return successResponse(res, 200, "Payment fetched successfully", payment);
+    return successResponse(res, 200, "Payment fetched successfully", paymentData);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -73,79 +83,95 @@ const getPaymentById = async (req, res) => {
   try {
     const { paymentId } = req.params;
 
-    const payment = await Payment.findById(paymentId)
-      .populate({
-        path: "orderId",
-        populate: { path: "storeId", select: "name email location" },
-      })
-      .populate("verifiedBy", "name email");
-
+    const payment = await Payment.findOne({ id: paymentId });
     if (!payment) {
       return errorResponse(res, 404, "Payment not found");
+    }
+
+    const paymentData = formatDoc(payment);
+
+    // Populate order
+    if (paymentData.orderId) {
+      const order = await Order.findOne({ id: paymentData.orderId });
+      if (order) {
+        paymentData.orderId = formatDoc(order);
+      }
     }
 
     // Check authorization
     if (req.role === "store") {
-      const order = await Order.findById(payment.orderId);
-      if (!order || !order.storeId.equals(req.user.id)) {
+      const order = await Order.findOne({ id: paymentData.orderId });
+      if (!order || order.getData().storeId !== req.user.id) {
         return errorResponse(res, 403, "Not authorized to view this payment");
       }
     }
 
-    return successResponse(res, 200, "Payment fetched successfully", payment);
+    return successResponse(res, 200, "Payment fetched successfully", paymentData);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
 };
 
-// SUBMIT TRANSACTION ID (Store submits after payment)
-const submitTransactionId = async (req, res) => {
+// GET ALL PAYMENTS (ADMIN)
+const getAllPayments = async (req, res) => {
+  try {
+    if (req.role !== "admin") {
+      return errorResponse(res, 403, "Only admin can view all payments");
+    }
+
+    const payments = await Payment.findAll();
+    const paymentsData = formatDocs(payments).sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    return successResponse(res, 200, "Payments fetched successfully", paymentsData);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+
+// UPLOAD PAYMENT RECEIPT (STORE)
+const uploadPaymentReceipt = async (req, res) => {
   try {
     if (req.role !== "store") {
-      return errorResponse(res, 403, "Only store users can submit transaction ID");
+      return errorResponse(res, 403, "Only store can upload payment receipt");
     }
 
-    const { orderId } = req.params;
-    const { transactionId } = req.body;
+    const { paymentId } = req.params;
+    const { receiptUrl, transactionId } = req.body;
 
-    if (!transactionId) {
-      return errorResponse(res, 400, "Transaction ID is required");
+    if (!receiptUrl) {
+      return errorResponse(res, 400, "Receipt URL is required");
     }
 
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return errorResponse(res, 404, "Order not found");
-    }
-
-    if (!order.storeId.equals(req.user.id)) {
-      return errorResponse(res, 403, "Not authorized to update this payment");
-    }
-
-    const payment = await Payment.findOne({ orderId });
+    const payment = await Payment.findOne({ id: paymentId });
     if (!payment) {
       return errorResponse(res, 404, "Payment not found");
     }
 
-    if (payment.status === "verified") {
-      return errorResponse(res, 400, "Payment already verified");
+    const paymentData = payment.getData();
+
+    // Verify payment belongs to store's order
+    const order = await Order.findOne({ id: paymentData.orderId });
+    if (!order || order.getData().storeId !== req.user.id) {
+      return errorResponse(res, 403, "Not authorized to update this payment");
     }
 
-    payment.transactionId = transactionId;
-    payment.status = "submitted";
-    payment.paidAt = new Date();
-    await payment.save();
+    // Update payment with receipt
+    await payment.update({
+      receiptUrl,
+      transactionId: transactionId || paymentData.transactionId,
+      status: "submitted",
+    });
 
-    // Update order payment status
-    order.paymentStatus = "submitted";
-    await order.save();
-
-    return successResponse(res, 200, "Transaction ID submitted successfully", payment);
+    const updated = await Payment.findOne({ id: paymentId });
+    return successResponse(res, 200, "Payment receipt uploaded successfully", formatDoc(updated));
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
 };
 
-// VERIFY PAYMENT (Admin verifies payment)
+// VERIFY PAYMENT (ADMIN)
 const verifyPayment = async (req, res) => {
   try {
     if (req.role !== "admin") {
@@ -153,109 +179,92 @@ const verifyPayment = async (req, res) => {
     }
 
     const { paymentId } = req.params;
-    const { verified, notes } = req.body;
+    const { status } = req.body; // "verified" or "rejected"
 
-    const payment = await Payment.findById(paymentId);
+    if (!status || !["verified", "rejected"].includes(status)) {
+      return errorResponse(res, 400, "Valid status is required (verified/rejected)");
+    }
+
+    const payment = await Payment.findOne({ id: paymentId });
     if (!payment) {
       return errorResponse(res, 404, "Payment not found");
     }
 
-    if (payment.status !== "submitted") {
-      return errorResponse(res, 400, "Payment must be submitted before verification");
-    }
-
-    if (verified) {
-      payment.status = "verified";
-      payment.verifiedBy = req.user._id;
-      payment.verifiedAt = new Date();
-      payment.notes = notes || "";
-
-      // Update order payment status
-      await Order.findByIdAndUpdate(payment.orderId, {
-        paymentStatus: "verified",
-        shippingStatus: "processing",
-      });
-    } else {
-      payment.status = "failed";
-      payment.notes = notes || "Payment verification failed";
-
-      // Update order payment status
-      await Order.findByIdAndUpdate(payment.orderId, {
-        paymentStatus: "failed",
-      });
-    }
-
-    await payment.save();
-
-    return successResponse(res, 200, "Payment verification completed", payment);
-  } catch (err) {
-    return errorResponse(res, 500, "Server error", err.message);
-  }
-};
-
-// GET ALL PAYMENTS (Admin only)
-const getAllPayments = async (req, res) => {
-  try {
-    if (req.role !== "admin") {
-      return errorResponse(res, 403, "Only admin can view all payments");
-    }
-
-    const { status } = req.query;
-    const filter = {};
-    if (status) filter.status = status;
-
-    const payments = await Payment.find(filter)
-      .populate({
-        path: "orderId",
-        populate: { path: "storeId", select: "name email location" },
-      })
-      .populate("verifiedBy", "name email")
-      .sort({ createdAt: -1 });
-
-    return successResponse(res, 200, "Payments fetched successfully", payments);
-  } catch (err) {
-    return errorResponse(res, 500, "Server error", err.message);
-  }
-};
-
-// DOWNLOAD RECEIPT (Both store and admin)
-const downloadReceipt = async (req, res) => {
-  try {
-    const { paymentId } = req.params;
-
-    const payment = await Payment.findById(paymentId).populate({
-      path: "orderId",
-      populate: { path: "storeId products.productId" },
+    // Update payment status
+    await payment.update({
+      status,
+      verifiedBy: req.user.id,
+      verifiedAt: Date.now(),
     });
 
+    // Update order payment status
+    const paymentData = payment.getData();
+    const order = await Order.findOne({ id: paymentData.orderId });
+    if (order) {
+      await order.update({
+        paymentStatus: status === "verified" ? "completed" : "failed"
+      });
+    }
+
+    const updated = await Payment.findOne({ id: paymentId });
+    return successResponse(res, 200, `Payment ${status} successfully`, formatDoc(updated));
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+
+// GET STORE PAYMENTS
+const getStorePayments = async (req, res) => {
+  try {
+    if (req.role !== "store") {
+      return errorResponse(res, 403, "Only store can view their payments");
+    }
+
+    const storeId = req.user.id;
+
+    // Get all orders for this store
+    const orders = await Order.findAll({ where: { storeId } });
+    const orderIds = orders.map(order => order.getId());
+
+    // Get payments for these orders
+    const allPayments = await Payment.findAll();
+    const storePayments = allPayments.filter(payment => 
+      orderIds.includes(payment.getData().orderId)
+    );
+
+    const paymentsData = formatDocs(storePayments).sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    return successResponse(res, 200, "Store payments fetched successfully", paymentsData);
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+
+// UPDATE PAYMENT STATUS (ADMIN)
+const updatePaymentStatus = async (req, res) => {
+  try {
+    if (req.role !== "admin") {
+      return errorResponse(res, 403, "Only admin can update payment status");
+    }
+
+    const { paymentId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return errorResponse(res, 400, "Status is required");
+    }
+
+    const payment = await Payment.findOne({ id: paymentId });
     if (!payment) {
       return errorResponse(res, 404, "Payment not found");
     }
 
-    if (payment.status !== "verified") {
-      return errorResponse(res, 400, "Payment must be verified to download receipt");
-    }
+    await payment.update({ status });
 
-    // Check authorization
-    if (req.role === "store") {
-      const order = await Order.findById(payment.orderId);
-      if (!order || !order.storeId.equals(req.user.id)) {
-        return errorResponse(res, 403, "Not authorized to download this receipt");
-      }
-    }
-
-    // Generate receipt data
-    const receiptData = {
-      receiptNumber: `RCP-${payment._id.toString().slice(-8).toUpperCase()}`,
-      paymentId: payment._id,
-      transactionId: payment.transactionId,
-      amount: payment.amount,
-      paymentDate: payment.paidAt,
-      verifiedDate: payment.verifiedAt,
-      order: payment.orderId,
-    };
-
-    return successResponse(res, 200, "Receipt data generated", receiptData);
+    const updated = await Payment.findOne({ id: paymentId });
+    return successResponse(res, 200, "Payment status updated successfully", formatDoc(updated));
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -265,8 +274,9 @@ module.exports = {
   initiatePayment,
   getPaymentByOrderId,
   getPaymentById,
-  submitTransactionId,
-  verifyPayment,
   getAllPayments,
-  downloadReceipt,
+  uploadPaymentReceipt,
+  verifyPayment,
+  getStorePayments,
+  updatePaymentStatus,
 };

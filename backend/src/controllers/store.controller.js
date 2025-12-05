@@ -1,5 +1,5 @@
-const Store = require("../../models/store.model");
-const Company = require("../../models/company.model");
+const { Store, Company, Product } = require("../../models/firestore");
+const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler");
 
 // CREATE STORE
@@ -16,20 +16,23 @@ const createStore = async (req, res) => {
       });
     }
 
-    const companyExists = await Company.findById(companyId);
+    const companyExists = await Company.findOne({ id: companyId });
     if (!companyExists) return errorResponse(res, 404, "Company not found");
 
-    const exists = await Store.findOne({ email });
+    const exists = await Store.findOne({ where: { email } });
     if (exists) return errorResponse(res, 409, "Store with email already exists");
+
+    // Hash password
+    const hashedPassword = await Store.hashPassword(password);
 
     const storeData = {
       companyId,
       name,
       email,
-      password,
+      password: hashedPassword,
       location,
       address,
-      createdBy: req.user._id,
+      createdBy: req.user.id,
     };
 
     // Add landingPage if provided
@@ -39,7 +42,7 @@ const createStore = async (req, res) => {
 
     const store = await Store.create(storeData);
 
-    const responseData = store.toObject();
+    const responseData = formatDoc(store);
     delete responseData.password;
 
     return successResponse(res, 201, "Store created successfully", responseData);
@@ -51,12 +54,37 @@ const createStore = async (req, res) => {
 //GET ALL STORES
 const getAllStores = async (req, res) => {
   try {
-    const stores = await Store.find()
-      .select("-password")
-      .populate("companyId", "name description createdBy")
-      .populate("products", "name price qty brand image category description");
+    const stores = await Store.findAll();
+    
+    // Populate company and products for each store
+    const storesData = await Promise.all(
+      stores.map(async (store) => {
+        const storeData = formatDoc(store);
+        delete storeData.password;
+        
+        // Get company
+        if (storeData.companyId) {
+          const company = await Company.findOne({ id: storeData.companyId });
+          if (company) {
+            const companyData = formatDoc(company);
+            storeData.companyId = {
+              id: companyData.id,
+              name: companyData.name,
+              description: companyData.description,
+              createdBy: companyData.createdBy
+            };
+          }
+        }
+        
+        // Get products
+        const products = await Product.findAll({ where: { storeId: storeData.id } });
+        storeData.products = formatDocs(products);
+        
+        return storeData;
+      })
+    );
 
-    return successResponse(res, 200, "Stores with company & products fetched", stores);
+    return successResponse(res, 200, "Stores with company & products fetched", storesData);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -70,8 +98,13 @@ const getStoresByCompany = async (req, res) => {
 
     if (!companyId) return errorResponse(res, 400, "Company ID required");
 
-    const stores = await Store.find({ companyId });
-    return successResponse(res, 200, "Stores fetched", stores);
+    const stores = await Store.findAll({ where: { companyId } });
+    const storesData = formatDocs(stores).map(store => {
+      delete store.password;
+      return store;
+    });
+    
+    return successResponse(res, 200, "Stores fetched", storesData);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -83,14 +116,32 @@ const getStoreById = async (req, res) => {
     const { id } = req.params;
     if (!id) return errorResponse(res, 400, "Store ID is required");
 
-    const store = await Store.findById(id)
-      .select("-password")
-      .populate("companyId", "name email description createdAt")
-      .populate("products", "name price qty brand image category description");
-      
+    const store = await Store.findOne({ id });
     if (!store) return errorResponse(res, 404, "Store not found");
 
-    return successResponse(res, 200, "Store fetched successfully", store);
+    const storeData = formatDoc(store);
+    delete storeData.password;
+
+    // Populate company
+    if (storeData.companyId) {
+      const company = await Company.findOne({ id: storeData.companyId });
+      if (company) {
+        const companyData = formatDoc(company);
+        storeData.companyId = {
+          id: companyData.id,
+          name: companyData.name,
+          email: companyData.email,
+          description: companyData.description,
+          createdAt: companyData.createdAt
+        };
+      }
+    }
+
+    // Populate products
+    const products = await Product.findAll({ where: { storeId: id } });
+    storeData.products = formatDocs(products);
+
+    return successResponse(res, 200, "Store fetched successfully", storeData);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -99,14 +150,31 @@ const getStoreById = async (req, res) => {
 // GET LOGGED-IN STORE'S OWN DETAILS
 const getMyStoreDetails = async (req, res) => {
   try {
-    const store = await Store.findById(req.user._id)
-      .select("-password")
-      .populate("companyId", "name email description")
-      .populate("products", "name price qty brand image category description");
-    
+    const store = await Store.findOne({ id: req.user.id });
     if (!store) return errorResponse(res, 404, "Store not found");
 
-    return successResponse(res, 200, "Store details fetched successfully", store);
+    const storeData = formatDoc(store);
+    delete storeData.password;
+
+    // Populate company
+    if (storeData.companyId) {
+      const company = await Company.findOne({ id: storeData.companyId });
+      if (company) {
+        const companyData = formatDoc(company);
+        storeData.companyId = {
+          id: companyData.id,
+          name: companyData.name,
+          email: companyData.email,
+          description: companyData.description
+        };
+      }
+    }
+
+    // Populate products
+    const products = await Product.findAll({ where: { storeId: req.user.id } });
+    storeData.products = formatDocs(products);
+
+    return successResponse(res, 200, "Store details fetched successfully", storeData);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -120,25 +188,29 @@ const updateStore = async (req, res) => {
 
     if (!id) return errorResponse(res, 400, "Store ID is required");
 
-    const store = await Store.findById(id);
+    const store = await Store.findOne({ id });
     if (!store) return errorResponse(res, 404, "Store not found");
 
-    if (email && email !== store.email) {
-      const emailExists = await Store.findOne({ email });
+    if (email && email !== store.getData().email) {
+      const emailExists = await Store.findOne({ where: { email } });
       if (emailExists) return errorResponse(res, 409, "Email already in use");
     }
 
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (password) updateData.password = password;
+    if (password) updateData.password = await Store.hashPassword(password);
     if (location) updateData.location = location;
     if (address) updateData.address = address;
     if (landingPage) updateData.landingPage = landingPage;
 
-    const updatedStore = await Store.findByIdAndUpdate(id, updateData, { new: true }).select("-password");
+    await Store.update(updateData, { id });
 
-    return successResponse(res, 200, "Store updated successfully", updatedStore);
+    const updatedStore = await Store.findOne({ id });
+    const responseData = formatDoc(updatedStore);
+    delete responseData.password;
+
+    return successResponse(res, 200, "Store updated successfully", responseData);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -150,8 +222,10 @@ const deleteStore = async (req, res) => {
     const { id } = req.params;
     if (!id) return errorResponse(res, 400, "Store ID required");
 
-    const deleted = await Store.findByIdAndDelete(id);
-    if (!deleted) return errorResponse(res, 404, "Store not found");
+    const store = await Store.findOne({ id });
+    if (!store) return errorResponse(res, 404, "Store not found");
+
+    await Store.destroy({ id });
 
     return successResponse(res, 200, "Store deleted successfully");
   } catch (err) {

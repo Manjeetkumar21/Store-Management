@@ -1,4 +1,5 @@
-const Company = require("../../models/company.model");
+const { Company, Store } = require("../../models/firestore");
+const { formatDoc, formatDocs, populateMany } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler");
 
 // Create Company
@@ -15,16 +16,20 @@ const createCompany = async (req, res) => {
     }
 
     // Check if company already exists
-    const existing = await Company.findOne({ name });
+    const existing = await Company.findOne({ where: { name } });
     if (existing) {
       return errorResponse(res, 409, "Company already exists", {
         name: "Company name must be unique",
       });
     }
 
-    const company = await Company.create({ name, description,createdBy: req.user._id, });
+    const company = await Company.create({ 
+      name, 
+      description,
+      createdBy: req.user.id,
+    });
 
-    return successResponse(res, 201, "Company created successfully", company);
+    return successResponse(res, 201, "Company created successfully", formatDoc(company));
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -33,14 +38,22 @@ const createCompany = async (req, res) => {
 // Get All Companies
 const getAllCompanies = async (req, res) => {
   try {
-    const companies = await Company.find()
-      .populate({
-        path: "stores",
-        select: "-password",
+    const companies = await Company.findAll();
+    
+    // Get stores for each company
+    const companiesData = await Promise.all(
+      companies.map(async (company) => {
+        const companyData = formatDoc(company);
+        const stores = await Store.findAll({ where: { companyId: companyData.id } });
+        companyData.stores = formatDocs(stores).map(store => {
+          delete store.password;
+          return store;
+        });
+        return companyData;
       })
-      .lean();
+    );
 
-    return successResponse(res, 200, "Companies fetched successfully", companies);
+    return successResponse(res, 200, "Companies fetched successfully", companiesData);
 
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
@@ -55,10 +68,10 @@ const getCompanyById = async (req, res) => {
     // Validate ID
     if (!id) return errorResponse(res, 400, "Company ID is required");
 
-    const company = await Company.findById(id);
+    const company = await Company.findOne({ id });
     if (!company) return errorResponse(res, 404, "Company not found");
 
-    return successResponse(res, 200, "Company details fetched", company);
+    return successResponse(res, 200, "Company details fetched", formatDoc(company));
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -76,15 +89,17 @@ const updateCompany = async (req, res) => {
       return errorResponse(res, 400, "At least one field is required to update");
     }
 
-    const company = await Company.findByIdAndUpdate(
-      id,
-      { name, description },
-      { new: true }
-    );
-
+    const company = await Company.findOne({ id });
     if (!company) return errorResponse(res, 404, "Company not found");
 
-    return successResponse(res, 200, "Company updated successfully", company);
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+
+    await Company.update(updateData, { id });
+
+    const updatedCompany = await Company.findOne({ id });
+    return successResponse(res, 200, "Company updated successfully", formatDoc(updatedCompany));
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
@@ -97,11 +112,12 @@ const deleteCompany = async (req, res) => {
 
     if (!id) return errorResponse(res, 400, "Company ID is required");
 
-    const company = await Company.findByIdAndDelete(id);
-
+    const company = await Company.findOne({ id });
     if (!company) return errorResponse(res, 404, "Company not found");
 
-    return successResponse(res, 200, "Company deleted successfully", company);
+    await Company.destroy({ id });
+
+    return successResponse(res, 200, "Company deleted successfully", formatDoc(company));
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }

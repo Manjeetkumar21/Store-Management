@@ -1,4 +1,5 @@
-const Address = require("../../models/address.model");
+const { Address } = require("../../models/firestore");
+const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler");
 
 // CREATE ADDRESS
@@ -16,6 +17,14 @@ const createAddress = async (req, res) => {
       return errorResponse(res, 400, "Required fields missing");
     }
 
+    // If setting as default, unset other defaults first
+    if (isDefault) {
+      const existingAddresses = await Address.findAll({ where: { storeId } });
+      await Promise.all(
+        existingAddresses.map(addr => addr.update({ isDefault: false }))
+      );
+    }
+
     const address = await Address.create({
       storeId,
       fullName,
@@ -29,7 +38,7 @@ const createAddress = async (req, res) => {
       isDefault: isDefault || false,
     });
 
-    return successResponse(res, 201, "Address created successfully", address);
+    return successResponse(res, 201, "Address created successfully", formatDoc(address));
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -43,9 +52,16 @@ const getStoreAddresses = async (req, res) => {
     }
 
     const storeId = req.user.id;
-    const addresses = await Address.find({ storeId }).sort({ isDefault: -1, createdAt: -1 });
+    const addresses = await Address.findAll({ where: { storeId } });
 
-    return successResponse(res, 200, "Addresses fetched successfully", addresses);
+    // Sort: default first, then by creation date
+    const sortedAddresses = formatDocs(addresses).sort((a, b) => {
+      if (a.isDefault && !b.isDefault) return -1;
+      if (!a.isDefault && b.isDefault) return 1;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+    return successResponse(res, 200, "Addresses fetched successfully", sortedAddresses);
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -61,12 +77,12 @@ const getAddressById = async (req, res) => {
     const { id } = req.params;
     const storeId = req.user.id;
 
-    const address = await Address.findOne({ _id: id, storeId });
-    if (!address) {
+    const address = await Address.findOne({ id });
+    if (!address || address.getData().storeId !== storeId) {
       return errorResponse(res, 404, "Address not found");
     }
 
-    return successResponse(res, 200, "Address fetched successfully", address);
+    return successResponse(res, 200, "Address fetched successfully", formatDoc(address));
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -83,18 +99,25 @@ const updateAddress = async (req, res) => {
     const storeId = req.user.id;
     const { fullName, phone, addressLine1, addressLine2, city, state, zipCode, country } = req.body;
 
-    const address = await Address.findOne({ _id: id, storeId });
-    if (!address) {
+    const address = await Address.findOne({ id });
+    if (!address || address.getData().storeId !== storeId) {
       return errorResponse(res, 404, "Address not found");
     }
 
-    const updated = await Address.findByIdAndUpdate(
-      id,
-      { fullName, phone, addressLine1, addressLine2, city, state, zipCode, country },
-      { new: true, runValidators: true }
-    );
+    const updateData = {};
+    if (fullName) updateData.fullName = fullName;
+    if (phone) updateData.phone = phone;
+    if (addressLine1) updateData.addressLine1 = addressLine1;
+    if (addressLine2 !== undefined) updateData.addressLine2 = addressLine2;
+    if (city) updateData.city = city;
+    if (state) updateData.state = state;
+    if (zipCode) updateData.zipCode = zipCode;
+    if (country) updateData.country = country;
 
-    return successResponse(res, 200, "Address updated successfully", updated);
+    await Address.update(updateData, { id });
+
+    const updated = await Address.findOne({ id });
+    return successResponse(res, 200, "Address updated successfully", formatDoc(updated));
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -110,12 +133,12 @@ const deleteAddress = async (req, res) => {
     const { id } = req.params;
     const storeId = req.user.id;
 
-    const address = await Address.findOne({ _id: id, storeId });
-    if (!address) {
+    const address = await Address.findOne({ id });
+    if (!address || address.getData().storeId !== storeId) {
       return errorResponse(res, 404, "Address not found");
     }
 
-    await Address.findByIdAndDelete(id);
+    await Address.destroy({ id });
 
     return successResponse(res, 200, "Address deleted successfully");
   } catch (err) {
@@ -133,19 +156,26 @@ const setDefaultAddress = async (req, res) => {
     const { id } = req.params;
     const storeId = req.user.id;
 
-    const address = await Address.findOne({ _id: id, storeId });
-    if (!address) {
+    const address = await Address.findOne({ id });
+    if (!address || address.getData().storeId !== storeId) {
       return errorResponse(res, 404, "Address not found");
     }
 
     // Remove default from all other addresses
-    await Address.updateMany({ storeId, _id: { $ne: id } }, { isDefault: false });
+    const allAddresses = await Address.findAll({ where: { storeId } });
+    await Promise.all(
+      allAddresses.map(addr => {
+        if (addr.getId() !== id) {
+          return addr.update({ isDefault: false });
+        }
+      })
+    );
 
     // Set this address as default
-    address.isDefault = true;
-    await address.save();
+    await address.update({ isDefault: true });
 
-    return successResponse(res, 200, "Default address set successfully", address);
+    const updated = await Address.findOne({ id });
+    return successResponse(res, 200, "Default address set successfully", formatDoc(updated));
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }

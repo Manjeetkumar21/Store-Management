@@ -1,4 +1,5 @@
-const User = require("../models/user.model.js");
+const { User, Store } = require("../../models/firestore");
+const { formatDoc } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
 // ================= GET MY PROFILE =================
@@ -23,10 +24,22 @@ const updateMyProfile = async (req, res) => {
       return errorResponse(res, 400, "Name is required");
     }
 
-    req.user.name = name;
-    await req.user.save();
+    // Update based on role
+    if (req.role === "admin") {
+      await User.update({ name }, { id: req.user.id });
+      const updatedUser = await User.findOne({ id: req.user.id });
+      const userData = formatDoc(updatedUser);
+      delete userData.password;
+      return successResponse(res, 200, "Profile updated", userData);
+    } else if (req.role === "store") {
+      await Store.update({ name }, { id: req.user.id });
+      const updatedStore = await Store.findOne({ id: req.user.id });
+      const storeData = formatDoc(updatedStore);
+      delete storeData.password;
+      return successResponse(res, 200, "Profile updated", storeData);
+    }
 
-    return successResponse(res, 200, "Profile updated", req.user);
+    return errorResponse(res, 400, "Invalid role");
   } catch (error) {
     return errorResponse(res, 500, "Server error", error.message);
   }
