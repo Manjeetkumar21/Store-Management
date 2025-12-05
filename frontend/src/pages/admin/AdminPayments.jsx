@@ -154,8 +154,8 @@ export const AdminPayments = () => {
                     <div className="space-y-4">
                         {filteredPayments.map((payment) => (
                             <div
-                                key={payment._id}
-                                onClick={() => navigate(`/admin/payments/${payment._id}`)}
+                                key={payment.id}
+                                onClick={() => navigate(`/admin/payments/${payment.id}`)}
                                 className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-green-300 transition-all cursor-pointer transform hover:-translate-y-0.5"
                             >
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -164,10 +164,10 @@ export const AdminPayments = () => {
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
                                                 <h3 className="font-semibold text-gray-900 text-lg">
-                                                    Payment #{payment._id.slice(-8).toUpperCase()}
+                                                    Payment #{payment.id.slice(-8).toUpperCase()}
                                                 </h3>
                                                 <p className="text-sm text-gray-600 mt-1">
-                                                    Order: #{payment.orderId?._id?.slice(-8).toUpperCase() || "N/A"}
+                                                    Order: #{payment.orderId?.id?.slice(-8).toUpperCase() || "N/A"}
                                                 </p>
                                                 <p className="text-sm text-gray-600">
                                                     Store: {payment.orderId?.storeId?.name || "Unknown"}
@@ -244,7 +244,7 @@ export const AdminPayments = () => {
                                         {/* Verify Payment */}
                                         {payment.status === "submitted" && (
                                             <>
-                                                {verifyingPaymentId === payment._id ? (
+                                                {verifyingPaymentId === payment.id ? (
                                                     <div className="space-y-2">
                                                         <Input
                                                             placeholder="Verification notes (optional)"
@@ -255,7 +255,7 @@ export const AdminPayments = () => {
                                                             variant="primary"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleVerifyPayment(payment._id, true);
+                                                                handleVerifyPayment(payment.id, true);
                                                             }}
                                                             className="w-full flex items-center justify-center gap-2"
                                                         >
@@ -266,7 +266,7 @@ export const AdminPayments = () => {
                                                             variant="secondary"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleVerifyPayment(payment._id, false);
+                                                                handleVerifyPayment(payment.id, false);
                                                             }}
                                                             className="w-full flex items-center justify-center gap-2"
                                                         >
@@ -291,7 +291,7 @@ export const AdminPayments = () => {
                                                         variant="primary"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setVerifyingPaymentId(payment._id);
+                                                            setVerifyingPaymentId(payment.id);
                                                         }}
                                                         className="w-full"
                                                     >
@@ -305,7 +305,7 @@ export const AdminPayments = () => {
                                         {payment.status === "verified" && (
                                             <Button
                                                 variant="secondary"
-                                                onClick={() => handleDownloadReceipt(payment._id)}
+                                                onClick={() => handleDownloadReceipt(payment.id)}
                                                 className="w-full flex items-center justify-center gap-2"
                                             >
                                                 <Download size={16} />
@@ -319,7 +319,7 @@ export const AdminPayments = () => {
                                                 variant="secondary"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/admin/orders/${payment.orderId._id}`);
+                                                    navigate(`/admin/orders/${payment.orderId.id}`);
                                                 }}
                                                 className="w-full"
                                             >

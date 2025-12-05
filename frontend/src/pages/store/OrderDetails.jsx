@@ -55,7 +55,7 @@ export const OrderDetails = () => {
         }
 
         try {
-            const paymentId = order.paymentId._id || order.paymentId;
+            const paymentId = order.paymentId.id || order.paymentId;
             const response = await axiosInstance.get(`/payment/${paymentId}/receipt`);
             const receiptData = response.data.data;
 
@@ -92,7 +92,7 @@ export const OrderDetails = () => {
             </div>
             <div class="row" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
               <span class="label">Amount Paid:</span>
-              <span class="amount">₹${receiptData.amount.toFixed(2)}</span>
+              <span class="amount">₹${receiptData.amount}</span>
             </div>
             <button onclick="window.print()" style="margin-top: 30px; padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer;">
               Print Receipt
@@ -144,7 +144,7 @@ export const OrderDetails = () => {
                 <div className="flex items-start justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">
-                            Order #{order._id.slice(-8).toUpperCase()}
+                            Order #{order.id.slice(-8).toUpperCase()}
                         </h1>
                         <p className="text-gray-600 mt-2">
                             Placed on {new Date(order.createdAt).toLocaleDateString()} at{" "}
@@ -313,7 +313,7 @@ export const OrderDetails = () => {
                                 {order.status === "confirmed" && order.paymentStatus === "pending" && (
                                     <Button
                                         variant="primary"
-                                        onClick={() => navigate(`/store/payment/${order._id}`)}
+                                        onClick={() => navigate(`/store/payment/${order.id}`)}
                                         className="w-full flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         <CreditCard size={16} />

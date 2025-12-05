@@ -12,7 +12,7 @@ import { setCart } from "@/redux/slices/cartSlice"
 // This simplifies the structure pulled from the nested API response.
 // The API item looks like: { productId: { name, brand, price, ... }, qty, price }
 const transformItem = (item) => ({
-  productId: item.productId._id,
+  productId: item.productId.id,
   title: item.productId.name,
   brand: item.productId.brand,
   category: item.productId.category,
@@ -170,7 +170,7 @@ export const Cart = () => {
                     <h3 className="font-bold text-lg text-gray-900 truncate">{item.title}</h3>
                     <p className="text-sm text-gray-500">Brand: **{item.brand}**</p>
                     <p className="text-sm text-gray-500">Category: {item.category}</p>
-                    <p className="text-xl text-blue-600 font-bold mt-1">₹{item.price.toFixed(2)}</p>
+                    <p className="text-xl text-blue-600 font-bold mt-1">₹{item.price}</p>
                   </div>
 
                   {/* Quantity Controls */}
@@ -194,7 +194,7 @@ export const Cart = () => {
                   {/* Item Total */}
                   <div className="text-right w-24 flex-shrink-0">
                     <p className="font-bold text-xl text-gray-900 flex">
-                      ₹{(item.price * item.quantity).toFixed(2)}
+                      ₹{(item.price * item.quantity)}
                     </p>
                   </div>
 
@@ -216,11 +216,11 @@ export const Cart = () => {
               <div className="space-y-4 mb-6">
                 <div className="flex items-center justify-between text-lg text-gray-600">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-gray-800">₹{subtotal.toFixed(2)}</span>
+                  <span className="font-semibold text-gray-800">₹{subtotal}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg text-gray-600">
                   <span>Tax ({taxRate * 100}%)</span>
-                  <span className="font-semibold text-gray-800">₹{tax.toFixed(2)}</span>
+                  <span className="font-semibold text-gray-800">₹{tax}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg text-gray-600">
                   <span>Shipping</span>
@@ -231,7 +231,7 @@ export const Cart = () => {
               {/* Grand Total */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <span className="font-bold text-xl text-gray-900">Order Total</span>
-                <span className="text-xl font-bold text-blue-600">₹{total.toFixed(2)}</span>
+                <span className="text-xl font-bold text-blue-600">₹{total}</span>
               </div>
 
               {/* Checkout Buttons */}

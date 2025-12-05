@@ -69,7 +69,7 @@ export const AddressCard = ({
                     <div className="flex gap-2 mt-4 pt-3 border-t border-gray-200">
                         {!address.isDefault && onSetDefault && (
                             <button
-                                onClick={() => onSetDefault(address._id)}
+                                onClick={() => onSetDefault(address.id)}
                                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                             >
                                 Set as Default
@@ -85,7 +85,7 @@ export const AddressCard = ({
                         )}
                         {onDelete && (
                             <button
-                                onClick={() => onDelete(address._id)}
+                                onClick={() => onDelete(address.id)}
                                 className="text-sm text-red-600 hover:text-red-700 font-medium ml-auto"
                             >
                                 Delete

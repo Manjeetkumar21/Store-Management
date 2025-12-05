@@ -149,7 +149,7 @@ export const AdminPaymentDetails = () => {
                                     <CreditCard size={20} className="text-green-600 sm:w-7 sm:h-7" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">Payment #{payment._id.slice(-8).toUpperCase()}</h1>
+                                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">Payment #{payment.id.slice(-8).toUpperCase()}</h1>
                                     <p className="text-gray-500 text-xs sm:text-sm mt-1">
                                         Created on {new Date(payment.createdAt).toLocaleDateString('en-IN')} at {new Date(payment.createdAt).toLocaleTimeString()}
                                     </p>
@@ -230,7 +230,7 @@ export const AdminPaymentDetails = () => {
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-semibold text-gray-900 text-sm md:text-base">
-                                                Order #{payment.orderId._id?.slice(-8).toUpperCase() || "N/A"}
+                                                Order #{payment.orderId.id?.slice(-8).toUpperCase() || "N/A"}
                                             </p>
                                             <p className="text-xs md:text-sm text-gray-600 mt-1">
                                                 Store: {payment.orderId.storeId?.name || "Unknown"}
@@ -242,7 +242,7 @@ export const AdminPaymentDetails = () => {
                                         <Button
                                             variant="secondary"
                                             size="sm"
-                                            onClick={() => navigate(`/admin/orders/${payment.orderId._id || payment.orderId}`)}
+                                            onClick={() => navigate(`/admin/orders/${payment.orderId.id || payment.orderId}`)}
                                             className="flex items-center gap-2 w-full sm:w-auto text-xs md:text-sm"
                                         >
                                             <Eye size={14} className="md:w-4 md:h-4" />

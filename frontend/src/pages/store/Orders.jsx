@@ -79,7 +79,7 @@ export const Orders = () => {
             </div>
             <div class="row" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
               <span class="label">Amount Paid:</span>
-              <span class="amount">₹${receiptData.amount.toFixed(2)}</span>
+              <span class="amount">₹${receiptData.amount}</span>
             </div>
             <button onclick="window.print()" style="margin-top: 30px; padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer;">
               Print Receipt
@@ -125,13 +125,13 @@ export const Orders = () => {
           <div className="space-y-4">
             {orders.map((order) => (
               <div
-                key={order._id}
+                key={order.id}
                 className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-gray-900 text-lg">
-                      Order #{order._id.slice(-8).toUpperCase()}
+                      Order #{order.id.slice(-8).toUpperCase()}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {new Date(order.createdAt).toLocaleDateString()}
@@ -158,7 +158,7 @@ export const Orders = () => {
                     {order.products.map((item, index) => (
                       <li key={index} className="text-sm text-gray-900">
                         {item.qty}x {item.productId?.name || "Product"} - ₹
-                        {(item.price * item.qty).toFixed(2)}
+                        {(item.price * item.qty)}
                       </li>
                     ))}
                   </ul>
@@ -190,7 +190,7 @@ export const Orders = () => {
                   {order.status === "confirmed" && order.paymentStatus === "pending" && (
                     <Button
                       variant="primary"
-                      onClick={() => navigate(`/store/payment/${order._id}`)}
+                      onClick={() => navigate(`/store/payment/${order.id}`)}
                       className="flex items-center gap-2"
                     >
                       <Package size={16} />
@@ -202,7 +202,7 @@ export const Orders = () => {
                   {order.paymentStatus === "verified" && order.paymentId && (
                     <Button
                       variant="secondary"
-                      onClick={() => handleDownloadReceipt(order.paymentId._id || order.paymentId)}
+                      onClick={() => handleDownloadReceipt(order.paymentId.id || order.paymentId)}
                       className="flex items-center gap-2"
                     >
                       <Download size={16} />
@@ -214,7 +214,7 @@ export const Orders = () => {
                   {order.shippingStatus === "shipped" && !order.orderReceivedConfirmation && (
                     <Button
                       variant="primary"
-                      onClick={() => handleConfirmReceived(order._id)}
+                      onClick={() => handleConfirmReceived(order.id)}
                       className="flex items-center gap-2"
                     >
                       <CheckCircle2 size={16} />
@@ -225,7 +225,7 @@ export const Orders = () => {
                   {/* View Details */}
                   <Button
                     variant="secondary"
-                    onClick={() => navigate(`/store/orders/${order._id}`)}
+                    onClick={() => navigate(`/store/orders/${order.id}`)}
                     className="ml-auto"
                   >
                     View Details

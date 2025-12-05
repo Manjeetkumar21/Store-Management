@@ -41,7 +41,7 @@ export function CompaniesTable({
       {/* Table Body */}
       <div className="divide-y divide-border">
         {companies.map((company) => (
-          <div key={company._id} className="flex flex-col">
+          <div key={company.id} className="flex flex-col">
             {/* Main Row */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 px-4 md:px-6 py-4 md:py-5 items-center hover:bg-muted/50 transition-colors duration-150">
               {/* Company Name - Mobile & Desktop */}
@@ -92,18 +92,18 @@ export function CompaniesTable({
                 </button>
                 {company.stores && company.stores.length > 0 && (
                   <button
-                    onClick={() => onExpandClick(company._id)}
+                    onClick={() => onExpandClick(company.id)}
                     className="p-2 hover:bg-muted rounded-md transition-colors duration-150 text-muted-foreground"
                     title="Toggle stores"
                   >
-                    {expandedCompany === company._id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    {expandedCompany === company.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </button>
                 )}
               </div>
             </div>
 
             {/* Expanded Stores View */}
-            {expandedCompany === company._id && company.stores && company.stores.length > 0 && (
+            {expandedCompany === company.id && company.stores && company.stores.length > 0 && (
               <div className="bg-muted/30 border-t border-border px-4 md:px-6 py-4 animate-in slide-in-from-top duration-200">
                 <h5 className="text-sm font-semibold text-card-foreground mb-3 flex items-center gap-2">
                   <Store size={14} className="text-primary" />
@@ -112,7 +112,7 @@ export function CompaniesTable({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {company.stores.map((store) => (
                     <div
-                      key={store._id}
+                      key={store.id}
                       className="p-3 bg-card border border-border rounded-lg hover:border-primary/30 transition-colors"
                     >
                       <p className="font-medium text-sm text-card-foreground">{store.name}</p>

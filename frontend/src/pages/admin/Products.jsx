@@ -81,7 +81,7 @@ export const Products = () => {
 
       if (editingProduct) {
         // Update existing product
-        const response = await axiosInstance.put(`/product/${editingProduct._id}`, payload)
+        const response = await axiosInstance.put(`/product/${editingProduct.id}`, payload)
         dispatch(updateProduct(response.data.data))
         toast.success("Product updated successfully")
       } else {
@@ -105,7 +105,7 @@ export const Products = () => {
       stock: product.qty?.toString() || "",
       category: product.category || "",
       brand: product.brand || "",
-      storeId: product.storeId?._id || product.storeId || "",
+      storeId: product.storeId?.id || product.storeId || "",
     })
     setIsModalOpen(true)
   }
@@ -129,7 +129,7 @@ export const Products = () => {
   const openDeleteModal = (product) => {
     setDeleteModal({
       isOpen: true,
-      productId: product._id,
+      productId: product.id,
       productName: product.name
     })
   }
@@ -252,7 +252,7 @@ export const Products = () => {
               >
                 <option value="">Select a store</option>
                 {stores.map((store) => (
-                  <option key={store._id} value={store._id}>
+                  <option key={store.id} value={store.id}>
                     {store.name}
                   </option>
                 ))}

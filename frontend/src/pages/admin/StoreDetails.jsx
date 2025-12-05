@@ -140,7 +140,7 @@ export const StoreDetails = () => {
         e.preventDefault()
         setIsProcessing(true)
         try {
-            await axiosInstance.put(`/product/${productEditModal.product._id}`, productFormData)
+            await axiosInstance.put(`/product/${productEditModal.product.id}`, productFormData)
             toast.success("Product updated successfully!")
             setProductEditModal({ isOpen: false, product: null })
             fetchStoreDetails()
@@ -243,7 +243,7 @@ export const StoreDetails = () => {
                                 </div>
                                 <div>
                                     <h1 className="text-3xl font-bold text-gray-900">{store.name}</h1>
-                                    <p className="text-gray-500 text-sm mt-1">Store ID: {store._id}</p>
+                                    <p className="text-gray-500 text-sm mt-1">Store ID: {store.id}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
@@ -362,7 +362,7 @@ export const StoreDetails = () => {
                             </div>
                             <div>
                                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Company ID</label>
-                                <p className="text-gray-500 mt-1 text-sm font-mono">{store.companyId._id}</p>
+                                <p className="text-gray-500 mt-1 text-sm font-mono">{store.companyId.id}</p>
                             </div>
                         </div>
                     </div>
@@ -405,7 +405,7 @@ export const StoreDetails = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {store.products.map((product) => (
                                     <div
-                                        key={product._id}
+                                        key={product.id}
                                         className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1"
                                     >
                                         {/* Product Image */}
@@ -503,7 +503,7 @@ export const StoreDetails = () => {
                                                 <Button
                                                     variant="danger"
                                                     size="sm"
-                                                    onClick={() => setProductDeleteModal({ isOpen: true, productId: product._id })}
+                                                    onClick={() => setProductDeleteModal({ isOpen: true, productId: product.id })}
                                                     className="flex-1 flex items-center justify-center gap-1"
                                                 >
                                                     <Trash2 size={14} />

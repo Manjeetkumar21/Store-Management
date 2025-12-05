@@ -73,7 +73,7 @@ export const Companies = () => {
 
       if (editingCompany) {
         // Update existing company
-        const response = await axiosInstance.put(`/company/${editingCompany._id}`, formData)
+        const response = await axiosInstance.put(`/company/${editingCompany.id}`, formData)
         toast.success("Company updated successfully!")
       } else {
         // Add new company
@@ -120,7 +120,7 @@ export const Companies = () => {
       setSubmitting(true)
       setError(null)
 
-      await axiosInstance.delete(`/company/${deletingCompany._id}`)
+      await axiosInstance.delete(`/company/${deletingCompany.id}`)
       toast.success("Company deleted successfully!")
       setIsDeleteModalOpen(false)
       setDeletingCompany(null)
@@ -291,8 +291,8 @@ export const Companies = () => {
             <div className="space-y-4">
               {filteredCompanies.map((company) => (
                 <div
-                  key={company._id}
-                  onClick={() => company.stores?.length > 0 && setExpandedCompany(expandedCompany === company._id ? null : company._id)}
+                  key={company.id}
+                  onClick={() => company.stores?.length > 0 && setExpandedCompany(expandedCompany === company.id ? null : company.id)}
                   className="bg-gradient-to-br from-white via-white to-blue-50/30 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200 overflow-hidden group cursor-pointer"
                 >
                   {/* Decorative gradient bar */}
@@ -353,14 +353,14 @@ export const Companies = () => {
                         </button>
                         {company.stores?.length > 0 && (
                           <div className="p-3 text-gray-600 ml-2">
-                            {expandedCompany === company._id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            {expandedCompany === company.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Expandable Stores Section */}
-                    {expandedCompany === company._id && company.stores?.length > 0 && (
+                    {expandedCompany === company.id && company.stores?.length > 0 && (
                       <div className="mt-6 pt-6 border-t border-gray-200 animate-in slide-in-from-top duration-300">
                         <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                           <Store size={16} className="text-green-600" />
@@ -369,8 +369,8 @@ export const Companies = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {company.stores.map((store) => (
                             <div
-                              key={store._id}
-                              onClick={() => window.location.href = `/admin/stores/${store._id}`}
+                              key={store.id}
+                              onClick={() => window.location.href = `/admin/stores/${store.id}`}
                               className="group relative p-5 bg-gradient-to-br from-white to-blue-50 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
                             >
                               {/* Hover Overlay */}

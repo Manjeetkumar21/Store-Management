@@ -70,7 +70,7 @@ export const PaymentQR = () => {
         const upiId = import.meta.env.VITE_UPI_ID || "21manjeetkumar21@oksbi";
         const payeeName = import.meta.env.VITE_UPI_NAME || "Manjeet Kumar";
         const amount = payment.amount.toFixed(2);
-        const transactionNote = `Order ${order._id.slice(-8).toUpperCase()}`;
+        const transactionNote = `Order ${order.id.slice(-8).toUpperCase()}`;
 
         return `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(transactionNote)}`;
     };
@@ -181,7 +181,7 @@ export const PaymentQR = () => {
                             <div>
                                 <p className="text-gray-600 mb-1">Order ID</p>
                                 <p className="font-semibold text-gray-900">
-                                    #{order._id.slice(-8).toUpperCase()}
+                                    #{order.id.slice(-8).toUpperCase()}
                                 </p>
                             </div>
                             <div>

@@ -62,7 +62,7 @@ addressSchema.index({ storeId: 1, isDefault: 1 });
 addressSchema.pre("save", async function () {
   if (this.isDefault) {
     await mongoose.model("Address").updateMany(
-      { storeId: this.storeId, _id: { $ne: this._id } },
+      { storeId: this.storeId, _id: { $ne: this.id } },
       { isDefault: false }
     );
   }
