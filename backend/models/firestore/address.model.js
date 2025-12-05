@@ -1,6 +1,7 @@
 const { defineModel, DataTypes } = require('../../util/firesequelize');
 
 const Address = defineModel('addresses', {
+  id: { type: DataTypes.STRING },
   storeId: { type: DataTypes.STRING, required: true },
   fullName: { type: DataTypes.STRING, required: true },
   phone: { type: DataTypes.STRING, required: true },
@@ -11,8 +12,8 @@ const Address = defineModel('addresses', {
   zipCode: { type: DataTypes.STRING, required: true },
   country: { type: DataTypes.STRING, default: 'India' },
   isDefault: { type: DataTypes.BOOLEAN, default: false },
-  createdAt: { type: DataTypes.NUMBER, default: () => Date.now() },
-  updatedAt: { type: DataTypes.NUMBER, default: () => Date.now() }
+  createdAt: { type: DataTypes.TIMESTAMP },
+  updatedAt: { type: DataTypes.TIMESTAMP }
 });
 
 module.exports = Address;

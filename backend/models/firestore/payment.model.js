@@ -1,6 +1,7 @@
 const { defineModel, DataTypes } = require('../../util/firesequelize');
 
 const Payment = defineModel('payments', {
+  id: { type: DataTypes.STRING },
   orderId: { type: DataTypes.STRING, required: true },
   storeId: { type: DataTypes.STRING, required: true },
   transactionId: { type: DataTypes.STRING, default: '' },
@@ -13,8 +14,8 @@ const Payment = defineModel('payments', {
   receiptUrl: { type: DataTypes.STRING, default: '' },
   qrCodeUrl: { type: DataTypes.STRING, default: '' },
   notes: { type: DataTypes.STRING, default: '' },
-  createdAt: { type: DataTypes.NUMBER, default: () => Date.now() },
-  updatedAt: { type: DataTypes.NUMBER, default: () => Date.now() }
+  createdAt: { type: DataTypes.TIMESTAMP },
+  updatedAt: { type: DataTypes.TIMESTAMP }
 });
 
 module.exports = Payment;

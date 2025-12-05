@@ -31,7 +31,7 @@ const addToCart = async (req, res) => {
       cartData.items.push({ productId, qty, price: product.getData().price });
     }
 
-    await cart.update({ items: cartData.items, updatedAt: Date.now() });
+    await cart.update({ items: cartData.items });
 
     const updatedCart = await Cart.findOne({ where: { storeId } });
     return res.status(200).json({ status: true, message: "Item added", cart: formatDoc(updatedCart) });
@@ -101,7 +101,7 @@ const updateCartItem = async (req, res) => {
       item.qty = qty;
     }
 
-    await cart.update({ items: cartData.items, updatedAt: Date.now() });
+    await cart.update({ items: cartData.items });
 
     const updatedCart = await Cart.findOne({ where: { storeId } });
     return res.status(200).json({ status: true, message: "Cart updated", cart: formatDoc(updatedCart) });
@@ -128,7 +128,7 @@ const removeFromCart = async (req, res) => {
     const cartData = cart.getData();
     cartData.items = cartData.items.filter(i => i.productId !== productId);
 
-    await cart.update({ items: cartData.items, updatedAt: Date.now() });
+    await cart.update({ items: cartData.items });
 
     const updatedCart = await Cart.findOne({ where: { storeId } });
     return res.status(200).json({ status: true, message: "Item removed", cart: formatDoc(updatedCart) });
@@ -149,7 +149,7 @@ const clearCart = async (req, res) => {
 
     if (!cart) return res.status(404).json({ status: false, message: "Cart not found" });
 
-    await cart.update({ items: [], updatedAt: Date.now() });
+    await cart.update({ items: [] });
 
     return res.status(200).json({ status: true, message: "Cart cleared", cart: { items: [] } });
   } catch (err) {

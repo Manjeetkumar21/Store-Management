@@ -65,12 +65,22 @@ function formatDoc(doc) {
     ...data
   };
   
-  // Convert numeric timestamps to ISO strings for API responses
-  if (formatted.createdAt && typeof formatted.createdAt === 'number') {
-    formatted.createdAt = new Date(formatted.createdAt).toISOString();
+  // Convert Firebase Timestamps to ISO strings for API responses
+  if (formatted.createdAt) {
+    if (typeof formatted.createdAt === 'number') {
+      formatted.createdAt = new Date(formatted.createdAt).toISOString();
+    } else if (formatted.createdAt && typeof formatted.createdAt.toDate === 'function') {
+      // Firebase Timestamp object
+      formatted.createdAt = formatted.createdAt.toDate().toISOString();
+    }
   }
-  if (formatted.updatedAt && typeof formatted.updatedAt === 'number') {
-    formatted.updatedAt = new Date(formatted.updatedAt).toISOString();
+  if (formatted.updatedAt) {
+    if (typeof formatted.updatedAt === 'number') {
+      formatted.updatedAt = new Date(formatted.updatedAt).toISOString();
+    } else if (formatted.updatedAt && typeof formatted.updatedAt.toDate === 'function') {
+      // Firebase Timestamp object
+      formatted.updatedAt = formatted.updatedAt.toDate().toISOString();
+    }
   }
   
   return formatted;
@@ -88,14 +98,16 @@ function formatDocs(docs) {
 
 /**
  * Update timestamps on document update
+ * NOTE: This function is deprecated. Timestamps are now automatically handled
+ * by firesequelize using Firebase FieldValue.serverTimestamp()
  * @param {Object} data - Data object to update
  * @returns {Object} Data with updated timestamp
+ * @deprecated Use firesequelize's automatic timestamp handling instead
  */
 function updateTimestamp(data) {
-  return {
-    ...data,
-    updatedAt: Date.now()
-  };
+  // This function is kept for backward compatibility
+  // but is no longer needed as timestamps are handled automatically
+  return data;
 }
 
 /**

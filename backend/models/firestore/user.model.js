@@ -2,14 +2,15 @@ const { defineModel, DataTypes } = require('../../util/firesequelize');
 const bcrypt = require('bcryptjs');
 
 const User = defineModel('users', {
+  id: { type: DataTypes.STRING },
   name: { type: DataTypes.STRING, default: '' },
   email: { type: DataTypes.STRING, required: true },
   password: { type: DataTypes.STRING, required: true },
   role: { type: DataTypes.STRING, required: true }, // 'admin' or 'store'
   companyId: { type: DataTypes.STRING, default: null },
   storeId: { type: DataTypes.STRING, default: null },
-  createdAt: { type: DataTypes.NUMBER, default: () => Date.now() },
-  updatedAt: { type: DataTypes.NUMBER, default: () => Date.now() }
+  createdAt: { type: DataTypes.TIMESTAMP },
+  updatedAt: { type: DataTypes.TIMESTAMP }
 });
 
 // Password hashing helper

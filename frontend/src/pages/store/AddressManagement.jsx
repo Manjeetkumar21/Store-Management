@@ -57,7 +57,7 @@ export const AddressManagement = () => {
         setIsSubmitting(true);
         try {
             if (editingAddress) {
-                await axiosInstance.put(`/address/${editingAddress._id}`, formData);
+                await axiosInstance.put(`/address/${editingAddress.id}`, formData);
                 toast.success("Address updated successfully");
             } else {
                 await axiosInstance.post("/address", formData);
@@ -251,7 +251,7 @@ export const AddressManagement = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {addresses.map((address) => (
                             <AddressCard
-                                key={address._id}
+                                key={address.id}
                                 address={address}
                                 onEdit={handleEdit}
                                 onDelete={handleDeleteClick}
