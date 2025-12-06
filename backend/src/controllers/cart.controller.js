@@ -118,7 +118,7 @@ const removeFromCart = async (req, res) => {
       return res.status(403).json({ status: false, message: "Only store can access cart" });
 
     const storeId = req.user.id;
-    const { productId } = req.body;
+    const { productId } = req.params;
 
     if (!productId) return res.status(400).json({ status: false, message: "productId required" });
 

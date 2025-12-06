@@ -26,6 +26,7 @@ export const Products = () => {
     category: "",
     brand: "",
     storeId: "",
+    description: "",
     dimensionLength: "",
     dimensionWidth: "",
     dimensionHeight: "",
@@ -114,6 +115,7 @@ export const Products = () => {
       category: product.category || "",
       brand: product.brand || "",
       storeId: product.storeId?.id || product.storeId || "",
+      description: product.description || "",
       dimensionLength: product.dimensions?.length?.toString() || "",
       dimensionWidth: product.dimensions?.width?.toString() || "",
       dimensionHeight: product.dimensions?.height?.toString() || "",
@@ -146,7 +148,7 @@ export const Products = () => {
   }
 
   const resetForm = () => {
-    setFormData({ name: "", price: "", stock: "", category: "", brand: "", storeId: "", dimensionLength: "", dimensionWidth: "", dimensionHeight: "" })
+    setFormData({ name: "", price: "", stock: "", category: "", brand: "", storeId: "", description: "", dimensionLength: "", dimensionWidth: "", dimensionHeight: "" })
     setEditingProduct(null)
     setIsModalOpen(false)
   }
@@ -254,6 +256,25 @@ export const Products = () => {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Store *</label>
+              <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                value={formData.storeId}
+                onChange={(e) => setFormData({ ...formData, storeId: e.target.value })}
+                required
+              >
+                <option value="">Select a store</option>
+                {stores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+
+
             {/* Dimensions (Optional) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions (Optional)</label>
@@ -284,22 +305,16 @@ export const Products = () => {
                 />
               </div>
             </div>
-
+            
+             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Store *</label>
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                value={formData.storeId}
-                onChange={(e) => setFormData({ ...formData, storeId: e.target.value })}
-                required
-              >
-                <option value="">Select a store</option>
-                {stores.map((store) => (
-                  <option key={store.id} value={store.id}>
-                    {store.name}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                placeholder="Enter product description..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
             </div>
             <div className="flex gap-3 justify-end pt-4">
               <Button

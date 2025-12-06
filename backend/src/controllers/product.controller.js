@@ -5,7 +5,7 @@ const { successResponse, errorResponse } = require("../utils/responseHandler.js"
 // ================= CREATE PRODUCT (ADMIN) =================
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, storeId, category, brand, qty, image } = req.body;
+    const { name, description, price, storeId, category, brand, qty, image, dimensions } = req.body;
 
     if (!name || !price || !storeId) {
       return errorResponse(res, 400, "Name, Price & Store are required");
@@ -20,6 +20,7 @@ const createProduct = async (req, res) => {
       brand: brand || "",
       qty: qty || 0,
       image: image || "",
+      dimensions: dimensions || { length: null, width: null, height: null },
     });
 
     return successResponse(res, 201, "Product created successfully", formatDoc(product));
