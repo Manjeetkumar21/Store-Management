@@ -57,13 +57,18 @@ const uploadProductImage = async (req, res) => {
     const product = await Product.findOne({ id: productId });
     if (!product) return errorResponse(res, 404, "Product not found");
 
-    const oldImage = product.getData().image;
+    const productData = product.getData();
+    const oldImage = productData.image;
 
-    // Upload new image to Firebase Storage
+    // Get store information for folder structure
+    const store = await Store.findOne({ id: productData.storeId });
+    const storeName = store ? store.getData().name.replace(/[^a-zA-Z0-9]/g, '_') : 'unknown';
+    
+    // Upload new image to Firebase Storage with folder: products/{storeName}
     const imageUrl = await uploadFile(
       file.buffer,
       file.originalname,
-      'products',
+      `products/${storeName}`,
       file.mimetype
     );
 

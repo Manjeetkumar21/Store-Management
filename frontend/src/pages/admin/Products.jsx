@@ -31,6 +31,9 @@ export const Products = () => {
     dimensionWidth: "",
     dimensionHeight: "",
   })
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState("")
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -65,13 +68,58 @@ export const Products = () => {
     }
   }
 
+  // Handle image file selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file")
+        return
+      }
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB")
+        return
+      }
+      setImageFile(file)
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+  // Upload image to backend
+  const uploadProductImage = async (productId) => {
+    if (!imageFile) return null
+
+    setIsUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', imageFile)
+
+      const response = await axiosInstance.put(`/upload/product/${productId}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      return response.data.data.image
+    } catch (error) {
+      console.error('Image upload error:', error)
+      toast.error("Failed to upload image")
+      return null
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.name || !formData.price || !formData.storeId) {
       toast.error("Please fill all required fields")
       return
     }
-
     try {
       const payload = {
         name: formData.name,
@@ -87,19 +135,41 @@ export const Products = () => {
           height: formData.dimensionHeight ? parseFloat(formData.dimensionHeight) : null,
         },
       }
-
+      let productId
+      let productData
       if (editingProduct) {
         // Update existing product
         const response = await axiosInstance.put(`/product/${editingProduct.id}`, payload)
-        dispatch(updateProduct(response.data.data))
+        productData = response.data.data
+        productId = editingProduct.id
+
+        // Upload image if new one selected
+        if (imageFile) {
+          const imageUrl = await uploadProductImage(productId)
+          if (imageUrl) {
+            productData.image = imageUrl
+          }
+        }
+
+        dispatch(updateProduct(productData))
         toast.success("Product updated successfully")
       } else {
         // Create new product
         const response = await axiosInstance.post("/product", payload)
-        dispatch(addProduct(response.data.data))
+        productData = response.data.data
+        productId = productData.id
+
+        // Upload image if selected
+        if (imageFile) {
+          const imageUrl = await uploadProductImage(productId)
+          if (imageUrl) {
+            productData.image = imageUrl
+          }
+        }
+
+        dispatch(addProduct(productData))
         toast.success("Product added successfully")
       }
-
       resetForm()
     } catch (error) {
       toast.error(error.response?.data?.message || `Failed to ${editingProduct ? 'update' : 'add'} product`)
@@ -120,6 +190,8 @@ export const Products = () => {
       dimensionWidth: product.dimensions?.width?.toString() || "",
       dimensionHeight: product.dimensions?.height?.toString() || "",
     })
+    setImagePreview(product.image || "")
+    setImageFile(null)
     setIsModalOpen(true)
   }
 
@@ -151,6 +223,9 @@ export const Products = () => {
     setFormData({ name: "", price: "", stock: "", category: "", brand: "", storeId: "", description: "", dimensionLength: "", dimensionWidth: "", dimensionHeight: "" })
     setEditingProduct(null)
     setIsModalOpen(false)
+    setImageFile(null)
+    setImagePreview("")
+    setIsUploadingImage(false)
   }
 
   return (
@@ -274,6 +349,35 @@ export const Products = () => {
             </div>
 
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+              <div className="space-y-3">
+                {/* Image Preview */}
+                {(imagePreview || editingProduct?.image) && (
+                  <div className="relative w-full h-48 border-2 border-gray-200 rounded-lg overflow-hidden">
+                    <img
+                      src={imagePreview || editingProduct?.image}
+                      alt="Product preview"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+
+                {/* File Input */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                  />
+                  {isUploadingImage && (
+                    <span className="text-sm text-blue-600">Uploading...</span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">Supported: JPG, PNG, WEBP (Max 5MB)</p>
+              </div>
+            </div>
 
             {/* Dimensions (Optional) */}
             <div>
@@ -305,8 +409,8 @@ export const Products = () => {
                 />
               </div>
             </div>
-            
-             {/* Description */}
+
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
