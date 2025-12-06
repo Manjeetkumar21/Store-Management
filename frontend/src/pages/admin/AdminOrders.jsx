@@ -44,37 +44,35 @@ export function AdminOrders() {
         }
     };
 
-   const handleConfirmAction = async () => {
-    if (!confirmModal.orderId || !confirmModal.type) return;
+    const handleConfirmAction = async () => {
+        if (!confirmModal.orderId || !confirmModal.type) return;
 
-    setIsProcessing(true);
-    try {
-        // Confirm order
-        if (confirmModal.type === "confirm") {
-            await axiosInstance.patch(`/order/${confirmModal.orderId}/status`, {
-                status: "confirmed",
-            });
+        setIsProcessing(true);
+        try {
+            // Confirm order (now creates payment automatically)
+            if (confirmModal.type === "confirm") {
+                await axiosInstance.patch(`/order/${confirmModal.orderId}/confirm`);
 
-            toast.success("Order confirmed successfully!");
+                toast.success("Order confirmed and payment initiated!");
+            }
+
+            // Ship order
+            else if (confirmModal.type === "ship") {
+                await axiosInstance.patch(`/order/${confirmModal.orderId}/shipping-status`, {
+                    shippingStatus: "shipped",
+                });
+
+                toast.success("Order marked as shipped!");
+            }
+
+            setConfirmModal({ isOpen: false, orderId: null, type: null });
+            fetchOrders();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to process request");
+        } finally {
+            setIsProcessing(false);
         }
-
-        // Ship order
-        else if (confirmModal.type === "ship") {
-            await axiosInstance.patch(`/order/${confirmModal.orderId}/shipping-status`, {
-                shippingStatus: "shipped",
-            });
-
-            toast.success("Order marked as shipped!");
-        }
-
-        setConfirmModal({ isOpen: false, orderId: null, type: null });
-        fetchOrders();
-    } catch (error) {
-        toast.error(error.response?.data?.message || "Failed to process request");
-    } finally {
-        setIsProcessing(false);
-    }
-};
+    };
 
 
     const handleCancelSubmit = async () => {
@@ -115,6 +113,8 @@ export function AdminOrders() {
         return matchesSearch;
     });
 
+    console.log("filteredOrders", filteredOrders);
+
     return (
         <MainLayout
             header={
@@ -125,7 +125,7 @@ export function AdminOrders() {
                 />
             }
         >
-            <div className="space-y-6"> 
+            <div className="space-y-6">
                 {/* Filters */}
                 <div className="bg-white rounded-lg border border-gray-200 p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -291,7 +291,7 @@ export function AdminOrders() {
                                                 variant="secondary"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/admin/payments/${order.paymentId.id}`);
+                                                    navigate(`/admin/payments/${order.paymentId}`);
                                                 }}
                                                 className="w-full cursor-pointer"
                                             >
@@ -321,10 +321,11 @@ export function AdminOrders() {
                     title={confirmModal.type === "confirm" ? "Confirm Order" : "Mark as Shipped"}
                     message={
                         confirmModal.type === "confirm"
-                            ? "Are you sure you want to confirm this order?"
-                            : "Are you sure you want to mark this order as shipped?"
+                            ? "Are you sure you want to confirm this order? This will create a payment record and notify the store to proceed with payment."
+                            : "Are you sure you want to mark this order as shipped? The store will be notified and can confirm delivery once received."
                     }
-                    confirmText={confirmModal.type === "confirm" ? "Confirm" : "Mark Shipped"}
+                    confirmText={confirmModal.type === "confirm" ? "Yes, Confirm Order" : "Yes, Mark as Shipped"}
+                    cancelText="Cancel"
                     variant="primary"
                     isLoading={isProcessing}
                 />

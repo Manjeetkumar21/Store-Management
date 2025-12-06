@@ -26,6 +26,9 @@ export const Products = () => {
     category: "",
     brand: "",
     storeId: "",
+    dimensionLength: "",
+    dimensionWidth: "",
+    dimensionHeight: "",
   })
   const [loading, setLoading] = useState(true)
 
@@ -77,6 +80,11 @@ export const Products = () => {
         brand: formData.brand,
         qty: formData.stock ? parseInt(formData.stock) : 0,
         description: formData.description || "",
+        dimensions: {
+          length: formData.dimensionLength ? parseFloat(formData.dimensionLength) : null,
+          width: formData.dimensionWidth ? parseFloat(formData.dimensionWidth) : null,
+          height: formData.dimensionHeight ? parseFloat(formData.dimensionHeight) : null,
+        },
       }
 
       if (editingProduct) {
@@ -106,6 +114,9 @@ export const Products = () => {
       category: product.category || "",
       brand: product.brand || "",
       storeId: product.storeId?.id || product.storeId || "",
+      dimensionLength: product.dimensions?.length?.toString() || "",
+      dimensionWidth: product.dimensions?.width?.toString() || "",
+      dimensionHeight: product.dimensions?.height?.toString() || "",
     })
     setIsModalOpen(true)
   }
@@ -135,7 +146,7 @@ export const Products = () => {
   }
 
   const resetForm = () => {
-    setFormData({ name: "", price: "", stock: "", category: "", brand: "", storeId: "" })
+    setFormData({ name: "", price: "", stock: "", category: "", brand: "", storeId: "", dimensionLength: "", dimensionWidth: "", dimensionHeight: "" })
     setEditingProduct(null)
     setIsModalOpen(false)
   }
@@ -242,6 +253,38 @@ export const Products = () => {
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
               />
             </div>
+
+            {/* Dimensions (Optional) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions (Optional)</label>
+              <div className="grid grid-cols-3 gap-4">
+                <Input
+                  label="Length (cm)"
+                  type="number"
+                  step="0.1"
+                  placeholder="0"
+                  value={formData.dimensionLength}
+                  onChange={(e) => setFormData({ ...formData, dimensionLength: e.target.value })}
+                />
+                <Input
+                  label="Width (cm)"
+                  type="number"
+                  step="0.1"
+                  placeholder="0"
+                  value={formData.dimensionWidth}
+                  onChange={(e) => setFormData({ ...formData, dimensionWidth: e.target.value })}
+                />
+                <Input
+                  label="Height (cm)"
+                  type="number"
+                  step="0.1"
+                  placeholder="0"
+                  value={formData.dimensionHeight}
+                  onChange={(e) => setFormData({ ...formData, dimensionHeight: e.target.value })}
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Store *</label>
               <select

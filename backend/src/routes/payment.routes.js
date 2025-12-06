@@ -6,6 +6,7 @@ const {
   getPaymentByOrderId,
   getPaymentById,
   uploadPaymentReceipt,
+  submitTransactionId,
   verifyPayment,
   getAllPayments,
   getStorePayments,
@@ -19,6 +20,7 @@ router.use(auth);
 
 // Store routes
 router.get("/order/:orderId", getPaymentByOrderId);
+router.post("/order/:orderId/transaction", authorizeRoles("store"), submitTransactionId);
 router.post("/:paymentId/receipt", authorizeRoles("store"), uploadPaymentReceipt);
 router.get("/my", authorizeRoles("store"), getStorePayments);
 

@@ -132,7 +132,7 @@ export const AdminOrderDetails = () => {
                                                 {item.productId?.name || "Product"}
                                             </h3>
                                             <p className="text-xs md:text-sm text-gray-600">Quantity: {item.qty}</p>
-                                            <p className="text-xs md:text-sm text-gray-600">Price: {formatCurrency(item.price)}</p>
+                                            <p className="text-xs md:text-sm text-gray-600">Price: {item.price}</p>
                                         </div>
                                         <div className="text-left sm:text-right">
                                             <p className="font-bold text-gray-900 text-sm md:text-base">

@@ -171,6 +171,58 @@ const uploadPaymentReceipt = async (req, res) => {
   }
 };
 
+// SUBMIT TRANSACTION ID (STORE)
+const submitTransactionId = async (req, res) => {
+  try {
+    if (req.role !== "store") {
+      return errorResponse(res, 403, "Only store can submit transaction ID");
+    }
+
+    const { orderId } = req.params;
+    const { transactionId } = req.body;
+
+    if (!transactionId || !transactionId.trim()) {
+      return errorResponse(res, 400, "Transaction ID is required");
+    }
+
+    // Find payment by orderId
+    const payment = await Payment.findOne({ where: { orderId } });
+    if (!payment) {
+      return errorResponse(res, 404, "Payment not found for this order");
+    }
+
+    const paymentData = payment.getData();
+
+    // Verify payment belongs to store's order
+    const order = await Order.findOne({ id: orderId });
+    if (!order || order.getData().storeId !== req.user.id) {
+      return errorResponse(res, 403, "Not authorized to update this payment");
+    }
+
+    // Check if payment is already submitted or verified
+    if (paymentData.status === "verified") {
+      return errorResponse(res, 400, "Payment is already verified");
+    }
+
+    // Update payment with transaction ID
+    await payment.update({
+      transactionId: transactionId.trim(),
+      status: "submitted",
+      paidAt: Date.now(),
+    });
+
+    // Update order payment status
+    await order.update({ paymentStatus: "submitted" });
+
+    const updated = await Payment.findOne({ where: { orderId } });
+    return successResponse(res, 200, "Transaction ID submitted successfully", formatDoc(updated));
+  } catch (err) {
+    console.error("[SUBMIT TRANSACTION ERROR]:", err);
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+
+
 // VERIFY PAYMENT (ADMIN)
 const verifyPayment = async (req, res) => {
   try {
@@ -179,10 +231,10 @@ const verifyPayment = async (req, res) => {
     }
 
     const { paymentId } = req.params;
-    const { status } = req.body; // "verified" or "rejected"
+    const { verified, notes } = req.body;
 
-    if (!status || !["verified", "rejected"].includes(status)) {
-      return errorResponse(res, 400, "Valid status is required (verified/rejected)");
+    if (typeof verified !== "boolean") {
+      return errorResponse(res, 400, "Verified field is required (true/false)");
     }
 
     const payment = await Payment.findOne({ id: paymentId });
@@ -190,25 +242,41 @@ const verifyPayment = async (req, res) => {
       return errorResponse(res, 404, "Payment not found");
     }
 
+    const paymentData = payment.getData();
+
+    // Check if payment is in submitted status
+    if (paymentData.status !== "submitted") {
+      return errorResponse(res, 400, "Only submitted payments can be verified");
+    }
+
+    // Determine the new status
+    const newStatus = verified ? "verified" : "failed";
+
     // Update payment status
     await payment.update({
-      status,
+      status: newStatus,
       verifiedBy: req.user.id,
       verifiedAt: Date.now(),
+      notes: notes || paymentData.notes,
     });
 
     // Update order payment status
-    const paymentData = payment.getData();
     const order = await Order.findOne({ id: paymentData.orderId });
     if (order) {
       await order.update({
-        paymentStatus: status === "verified" ? "completed" : "failed"
+        paymentStatus: verified ? "verified" : "failed"
       });
     }
 
     const updated = await Payment.findOne({ id: paymentId });
-    return successResponse(res, 200, `Payment ${status} successfully`, formatDoc(updated));
+    return successResponse(
+      res, 
+      200, 
+      verified ? "Payment verified successfully" : "Payment marked as failed", 
+      formatDoc(updated)
+    );
   } catch (err) {
+    console.error("[VERIFY PAYMENT ERROR]:", err);
     return errorResponse(res, 500, "Server error", err.message);
   }
 };
@@ -276,6 +344,7 @@ module.exports = {
   getPaymentById,
   getAllPayments,
   uploadPaymentReceipt,
+  submitTransactionId,
   verifyPayment,
   getStorePayments,
   updatePaymentStatus,

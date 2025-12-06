@@ -1,4 +1,4 @@
-const { Order, Cart, Product, Payment, Address } = require("../../models/firestore");
+const { Order, Cart, Product, Payment, Address, Store } = require("../../models/firestore");
 const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler.js");
 
@@ -173,9 +173,28 @@ const getOrderById = async (req, res) => {
       })
     );
 
-    orderData.products = populatedProducts;
+    // Populate store information (for admin)
+    let storeData = orderData.storeId;
+    if (req.role === "admin") {
+      const store = await Store.findOne({ id: orderData.storeId });
+      storeData = store ? formatDoc(store) : orderData.storeId;
+    }
 
-    return successResponse(res, 200, "Order fetched successfully", orderData);
+    // Populate payment if exists
+    let paymentData = orderData.paymentId;
+    if (orderData.paymentId) {
+      const payment = await Payment.findOne({ id: orderData.paymentId });
+      paymentData = payment ? formatDoc(payment) : orderData.paymentId;
+    }
+
+    const populatedOrder = {
+      ...orderData,
+      products: populatedProducts,
+      storeId: storeData,
+      paymentId: paymentData
+    };
+
+    return successResponse(res, 200, "Order fetched successfully", populatedOrder);
   } catch (error) {
     console.error("[GET ORDER ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
@@ -203,6 +222,68 @@ const updateOrderStatus = async (req, res) => {
     return successResponse(res, 200, "Order status updated", formatDoc(updated));
   } catch (error) {
     console.error("[UPDATE ORDER STATUS ERROR]:", error);
+    return errorResponse(res, 500, "Internal server error");
+  }
+};
+
+
+// ================= CONFIRM ORDER (ADMIN) =================
+const confirmOrder = async (req, res) => {
+  try {
+    if (req.role !== "admin") 
+      return errorResponse(res, 403, "Only admin can confirm orders");
+
+    const { id } = req.params;
+
+    const order = await Order.findOne({ id });
+    if (!order) return errorResponse(res, 404, "Order not found");
+
+    const orderData = order.getData();
+
+    // Check if order is already confirmed
+    if (orderData.status === "confirmed") {
+      return errorResponse(res, 400, "Order is already confirmed");
+    }
+
+    // Check if order is pending
+    if (orderData.status !== "pending") {
+      return errorResponse(res, 400, "Only pending orders can be confirmed");
+    }
+
+    // Update order status to confirmed
+    await order.update({ 
+      status: "confirmed",
+      confirmedBy: req.user.id,
+      confirmedAt: Date.now()
+    });
+
+    // Check if payment already exists
+    const existingPayment = await Payment.findOne({ where: { orderId: id } });
+    
+    let paymentId;
+    if (existingPayment) {
+      paymentId = existingPayment.getId();
+    } else {
+      // Create payment automatically
+      const payment = await Payment.create({
+        orderId: id,
+        storeId: orderData.storeId,
+        amount: orderData.totalAmount,
+        paymentMethod: "qr_code",
+        status: "pending",
+        qrCodeUrl: process.env.PAYMENT_QR_URL || "https://example.com/qr-code.png",
+      });
+
+      paymentId = payment.getId();
+
+      // Update order with payment reference
+      await order.update({ paymentId });
+    }
+
+    const updated = await Order.findOne({ id });
+    return successResponse(res, 200, "Order confirmed and payment initiated", formatDoc(updated));
+  } catch (error) {
+    console.error("[CONFIRM ORDER ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
   }
 };
@@ -258,6 +339,52 @@ const updateShippingStatus = async (req, res) => {
 };
 
 
+// ================= CONFIRM ORDER RECEIVED (STORE) ========
+const confirmOrderReceived = async (req, res) => {
+  try {
+    if (req.role !== "store") 
+      return errorResponse(res, 403, "Only store can confirm order received");
+
+    const { id } = req.params;
+
+    const order = await Order.findOne({ id });
+    if (!order) return errorResponse(res, 404, "Order not found");
+
+    const orderData = order.getData();
+
+    // Check if order belongs to store
+    if (orderData.storeId !== req.user.id) {
+      return errorResponse(res, 403, "Not authorized to update this order");
+    }
+
+    // Check if order is shipped
+    if (orderData.shippingStatus !== "shipped") {
+      return errorResponse(res, 400, "Only shipped orders can be confirmed as received");
+    }
+
+    // Check if already confirmed
+    if (orderData.orderReceivedConfirmation) {
+      return errorResponse(res, 400, "Order already confirmed as received");
+    }
+
+    // Update order
+    await order.update({
+      orderReceivedConfirmation: true,
+      orderReceivedAt: Date.now(),
+      shippingStatus: "delivered",
+      deliveredAt: Date.now(),
+      status: "completed"
+    });
+
+    const updated = await Order.findOne({ id });
+    return successResponse(res, 200, "Order confirmed as received", formatDoc(updated));
+  } catch (error) {
+    console.error("[CONFIRM ORDER RECEIVED ERROR]:", error);
+    return errorResponse(res, 500, "Internal server error");
+  }
+};
+
+
 // ================= DELETE ORDER (ADMIN) ==================
 const deleteOrder = async (req, res) => {
   try {
@@ -285,7 +412,9 @@ module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  confirmOrder,
   updatePaymentStatus,
   updateShippingStatus,
+  confirmOrderReceived,
   deleteOrder,
 };

@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setCart } from "@/redux/slices/cartSlice"
-// Product Card Component
+import { formatDimensions } from "@/utils/format"
+
+
 const ProductCard = ({ product, onAddToCart }) => {
   const [qty, setQty] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
@@ -54,6 +56,13 @@ const ProductCard = ({ product, onAddToCart }) => {
         <h3 className="font-semibold text-gray-900 text-base leading-snug line-clamp-2 mb-3 min-h-[2.5rem]">
           {product.name}
         </h3>
+
+        {formatDimensions(product.dimensions) && (
+          <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+            <span>📏</span>
+            <span>{formatDimensions(product.dimensions)}</span>
+          </p>
+        )}
 
         <div className="mt-auto">
           <div className="mb-4">

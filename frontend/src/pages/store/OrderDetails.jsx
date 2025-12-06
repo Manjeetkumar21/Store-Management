@@ -193,7 +193,7 @@ export const OrderDetails = () => {
                                                 {item.productId?.name || "Product"}
                                             </h3>
                                             <p className="text-sm text-gray-600">Quantity: {item.qty}</p>
-                                            <p className="text-sm text-gray-600">Price: {formatCurrency(item.price)}</p>
+                                            <p className="text-sm text-gray-600">Price: {item.price}</p>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-gray-900">

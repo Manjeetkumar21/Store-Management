@@ -319,11 +319,11 @@ export const AdminPayments = () => {
                                                 variant="secondary"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/admin/orders/${payment.orderId.id}`);
+                                                    navigate(`/admin/orders/${payment.orderId}`);
                                                 }}
                                                 className="w-full"
                                             >
-                                                View Order....
+                                                View Order
                                             </Button>
                                         )}
                                     </div>

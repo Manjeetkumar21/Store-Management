@@ -4,6 +4,7 @@ import { Package, Download, CheckCircle2 } from "lucide-react"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { Button } from "@/components/ui/Button"
 import { OrderStatusBadge } from "@/components/OrderStatusBadge"
+import { ConfirmModal } from "@/components/ui/Modal"
 import { formatCurrency } from "@/utils/currency"
 import axiosInstance from "@/api/axiosInstance"
 import toast from "react-hot-toast"
@@ -12,6 +13,8 @@ export const Orders = () => {
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, orderId: null })
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -28,15 +31,19 @@ export const Orders = () => {
     }
   }
 
-  const handleConfirmReceived = async (orderId) => {
-    if (!confirm("Confirm that you have received this order?")) return
+  const handleConfirmReceived = async () => {
+    if (!confirmModal.orderId) return
 
+    setIsProcessing(true)
     try {
-      await axiosInstance.patch(`/order/${orderId}/received`)
+      await axiosInstance.patch(`/order/${confirmModal.orderId}/received`)
       toast.success("Order marked as received!")
+      setConfirmModal({ isOpen: false, orderId: null })
       fetchOrders()
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to confirm order")
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -93,6 +100,7 @@ export const Orders = () => {
     }
   }
 
+  console.log("orders", orders)
   return (
     <MainLayout>
       <div className="space-y-8">
@@ -202,7 +210,7 @@ export const Orders = () => {
                   {order.paymentStatus === "verified" && order.paymentId && (
                     <Button
                       variant="secondary"
-                      onClick={() => handleDownloadReceipt(order.paymentId.id || order.paymentId)}
+                      onClick={() => handleDownloadReceipt(order.paymentId)}
                       className="flex items-center gap-2"
                     >
                       <Download size={16} />
@@ -214,7 +222,7 @@ export const Orders = () => {
                   {order.shippingStatus === "shipped" && !order.orderReceivedConfirmation && (
                     <Button
                       variant="primary"
-                      onClick={() => handleConfirmReceived(order.id)}
+                      onClick={() => setConfirmModal({ isOpen: true, orderId: order.id })}
                       className="flex items-center gap-2"
                     >
                       <CheckCircle2 size={16} />
@@ -243,6 +251,19 @@ export const Orders = () => {
             ))}
           </div>
         )}
+
+        {/* Confirm Received Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ isOpen: false, orderId: null })}
+          onConfirm={handleConfirmReceived}
+          title="Confirm Order Received"
+          message="Have you received this order in good condition? This action confirms that the order has been delivered successfully and will mark it as completed."
+          confirmText="Yes, I Received It"
+          cancelText="Not Yet"
+          variant="primary"
+          isLoading={isProcessing}
+        />
       </div>
     </MainLayout>
   )

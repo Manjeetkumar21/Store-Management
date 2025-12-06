@@ -10,6 +10,10 @@ const Product = defineModel('products', {
   image: { type: DataTypes.STRING, default: '' },
   description: { type: DataTypes.STRING, default: '' },
   category: { type: DataTypes.STRING, default: '' },
+  dimensions: { 
+    type: DataTypes.OBJECT, 
+    default: { length: null, width: null, height: null } 
+  }, // length, width, height in cm
   createdAt: { type: DataTypes.TIMESTAMP },
   updatedAt: { type: DataTypes.TIMESTAMP }
 });
