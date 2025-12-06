@@ -9,6 +9,7 @@ import { FormModal } from "@/components/ui/FormModal"
 import { Input } from "@/components/ui/Input"
 import axiosInstance from "@/api/axiosInstance"
 import { formatCurrency } from "@/utils/currency"
+import { ProductFormModal } from "@/components/admin/ProductFormModal"
 
 export const StoreDetails = () => {
     const { storeId } = useParams()
@@ -65,6 +66,8 @@ export const StoreDetails = () => {
         description: "",
         image: "",
     })
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false)
+    const [editingProduct, setEditingProduct] = useState(null)
 
     useEffect(() => {
         fetchStoreDetails()
@@ -124,33 +127,6 @@ export const StoreDetails = () => {
         }
     }
 
-    const handleEditProduct = (product) => {
-        setProductFormData({
-            name: product.name,
-            price: product.price,
-            qty: product.qty,
-            brand: product.brand || "",
-            category: product.category || "",
-            description: product.description || "",
-        })
-        setProductEditModal({ isOpen: true, product })
-    }
-
-    const handleUpdateProduct = async (e) => {
-        e.preventDefault()
-        setIsProcessing(true)
-        try {
-            await axiosInstance.put(`/product/${productEditModal.product.id}`, productFormData)
-            toast.success("Product updated successfully!")
-            setProductEditModal({ isOpen: false, product: null })
-            fetchStoreDetails()
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to update product")
-        } finally {
-            setIsProcessing(false)
-        }
-    }
-
     const handleDeleteProduct = async () => {
         setIsProcessing(true)
         try {
@@ -191,6 +167,24 @@ export const StoreDetails = () => {
         } finally {
             setIsProcessing(false)
         }
+    }
+
+    const handleProductSuccess = (productData, action) => {
+        if (action === 'create') {
+            // Add to local products list
+            setProducts(prev => [...prev, productData])
+        } else if (action === 'update') {
+            // Update in local products list
+            setProducts(prev => prev.map(p => p.id === productData.id ? productData : p))
+        }
+        // Optionally refresh from server
+        fetchProducts()
+    }
+
+    const handleEditProduct = (product) => {
+        console.log("Prodcut : ", product)
+        setEditingProduct(product)
+        setIsProductModalOpen(true)
     }
 
     if (loading) {
@@ -390,7 +384,7 @@ export const StoreDetails = () => {
                                 )}
                                 <Button
                                     variant="primary"
-                                    onClick={() => setAddProductModal(true)}
+                                    onClick={() => setIsProductModalOpen(true)}
                                     className="flex items-center gap-2"
                                 >
                                     <Plus size={18} />
@@ -804,88 +798,17 @@ export const StoreDetails = () => {
             />
 
             {/* Product Edit Modal */}
-            <Modal
-                isOpen={productEditModal.isOpen}
-                onClose={() => setProductEditModal({ isOpen: false, product: null })}
-                title="Edit Product"
-            >
-                <form onSubmit={handleUpdateProduct} className="space-y-4">
-                    <Input
-                        label="Product Name"
-                        value={productFormData.name}
-                        onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
-                        required
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="Price"
-                            type="number"
-                            step="0.01"
-                            value={productFormData.price}
-                            onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
-                            required
-                        />
-                        <Input
-                            label="Quantity"
-                            type="number"
-                            value={productFormData.qty}
-                            onChange={(e) => setProductFormData({ ...productFormData, qty: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <Input
-                        label="Brand"
-                        value={productFormData.brand}
-                        onChange={(e) => setProductFormData({ ...productFormData, brand: e.target.value })}
-                    />
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select
-                            value={productFormData.category}
-                            onChange={(e) => setProductFormData({ ...productFormData, category: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Select category</option>
-                            <option value="electronics">Electronics</option>
-                            <option value="clothing">Clothing</option>
-                            <option value="food">Food</option>
-                            <option value="books">Books</option>
-                            <option value="toys">Toys</option>
-                            <option value="sports">Sports</option>
-                            <option value="home">Home</option>
-                            <option value="beauty">Beauty</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea
-                            value={productFormData.description}
-                            onChange={(e) => setProductFormData({ ...productFormData, description: e.target.value })}
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                    <div className="flex justify-end gap-3 mt-6">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => setProductEditModal({ isOpen: false, product: null })}
-                            disabled={isProcessing}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            isLoading={isProcessing}
-                            disabled={isProcessing}
-                        >
-                            Update Product
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
+            <ProductFormModal
+                isOpen={isProductModalOpen}
+                onClose={() => {
+                    setIsProductModalOpen(false)
+                    setEditingProduct(null)
+                }}
+                onSuccess={handleProductSuccess}
+                editingProduct={editingProduct}
+                stores={[store]}
+                preselectedStoreId={storeId}
+            />
 
             {/* Product Delete Confirmation Modal */}
             <ConfirmModal

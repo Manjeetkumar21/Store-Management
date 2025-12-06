@@ -12,6 +12,7 @@ import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
 import { setProducts, addProduct, updateProduct, deleteProduct, setStores } from "@/redux/slices/adminSlice"
 import { formatCurrency } from "../../utils/currency"
+import { ProductFormModal } from "@/components/admin/ProductFormModal"
 
 export const Products = () => {
   const dispatch = useAppDispatch()
@@ -115,84 +116,9 @@ export const Products = () => {
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!formData.name || !formData.price || !formData.storeId) {
-      toast.error("Please fill all required fields")
-      return
-    }
-    try {
-      const payload = {
-        name: formData.name,
-        price: parseFloat(formData.price),
-        storeId: formData.storeId,
-        category: formData.category,
-        brand: formData.brand,
-        qty: formData.stock ? parseInt(formData.stock) : 0,
-        description: formData.description || "",
-        dimensions: {
-          length: formData.dimensionLength ? parseFloat(formData.dimensionLength) : null,
-          width: formData.dimensionWidth ? parseFloat(formData.dimensionWidth) : null,
-          height: formData.dimensionHeight ? parseFloat(formData.dimensionHeight) : null,
-        },
-      }
-      let productId
-      let productData
-      if (editingProduct) {
-        // Update existing product
-        const response = await axiosInstance.put(`/product/${editingProduct.id}`, payload)
-        productData = response.data.data
-        productId = editingProduct.id
-
-        // Upload image if new one selected
-        if (imageFile) {
-          const imageUrl = await uploadProductImage(productId)
-          if (imageUrl) {
-            productData.image = imageUrl
-          }
-        }
-
-        dispatch(updateProduct(productData))
-        toast.success("Product updated successfully")
-      } else {
-        // Create new product
-        const response = await axiosInstance.post("/product", payload)
-        productData = response.data.data
-        productId = productData.id
-
-        // Upload image if selected
-        if (imageFile) {
-          const imageUrl = await uploadProductImage(productId)
-          if (imageUrl) {
-            productData.image = imageUrl
-          }
-        }
-
-        dispatch(addProduct(productData))
-        toast.success("Product added successfully")
-      }
-      resetForm()
-    } catch (error) {
-      toast.error(error.response?.data?.message || `Failed to ${editingProduct ? 'update' : 'add'} product`)
-    }
-  }
-
   const handleEdit = (product) => {
+    console.log("Prodcut : ",product)
     setEditingProduct(product)
-    setFormData({
-      name: product.name,
-      price: product.price.toString(),
-      stock: product.qty?.toString() || "",
-      category: product.category || "",
-      brand: product.brand || "",
-      storeId: product.storeId?.id || product.storeId || "",
-      description: product.description || "",
-      dimensionLength: product.dimensions?.length?.toString() || "",
-      dimensionWidth: product.dimensions?.width?.toString() || "",
-      dimensionHeight: product.dimensions?.height?.toString() || "",
-    })
-    setImagePreview(product.image || "")
-    setImageFile(null)
     setIsModalOpen(true)
   }
 
@@ -220,13 +146,12 @@ export const Products = () => {
     })
   }
 
-  const resetForm = () => {
-    setFormData({ name: "", price: "", stock: "", category: "", brand: "", storeId: "", description: "", dimensionLength: "", dimensionWidth: "", dimensionHeight: "" })
-    setEditingProduct(null)
-    setIsModalOpen(false)
-    setImageFile(null)
-    setImagePreview("")
-    setIsUploadingImage(false)
+  const handleProductSuccess = (productData, action) => {
+    if (action === 'create') {
+      dispatch(addProduct(productData))
+    } else if (action === 'update') {
+      dispatch(updateProduct(productData))
+    }
   }
 
   return (
@@ -286,192 +211,16 @@ export const Products = () => {
         </div>
 
         {/* Add/Edit Product Modal */}
-        <FormModal
+        <ProductFormModal
           isOpen={isModalOpen}
-          onClose={resetForm}
-          title={editingProduct ? "Edit Product" : "Add New Product"}
-          size="xl"
-          onSubmit={handleSubmit}
-          submitLabel={editingProduct ? "Update Product" : "Add Product"}
-          cancelLabel="Cancel"
-          isProcessing={isUploadingImage}
-        >
-          <div className="space-y-5">
-            {/* Basic Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">Basic Information</h3>
-
-              <Input
-                label="Product Name"
-                placeholder="Enter product name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Price"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required
-                />
-                <Input
-                  label="Stock Quantity"
-                  type="number"
-                  placeholder="0"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Category"
-                  placeholder="e.g., Electronics, Furniture"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                />
-                <Input
-                  label="Brand"
-                  placeholder="e.g., Samsung, Apple"
-                  value={formData.brand}
-                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Store <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer bg-white"
-                  value={formData.storeId}
-                  onChange={(e) => setFormData({ ...formData, storeId: e.target.value })}
-                  required
-                >
-                  <option value="">Select a store</option>
-                  {stores.map((store) => (
-                    <option key={store.id} value={store.id}>
-                      {store.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Product Image Section */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Product Image</label>
-              <div className="space-y-3">
-                {/* Image Preview */}
-                {(imagePreview || editingProduct?.image) && (
-                  <div className="relative w-full h-56 bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden group">
-                    <img
-                      src={imagePreview || editingProduct?.image}
-                      alt="Product preview"
-                      className="w-full h-full object-contain p-2"
-                    />
-                    {/* Remove Image Button */}
-                    {imagePreview && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImageFile(null)
-                          setImagePreview("")
-                        }}
-                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* File Input */}
-                <div className="flex flex-col gap-2">
-                  <label className="cursor-pointer">
-                    <div className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
-                      <div className="text-center">
-                        <Package className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                        <span className="text-sm font-medium text-gray-700">
-                          {imagePreview || editingProduct?.image ? "Change Image" : "Upload Image"}
-                        </span>
-                        <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP (Max 1MB)</p>
-                      </div>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-
-                  {isUploadingImage && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-blue-600 bg-blue-50 py-2 rounded">
-                      <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                      <span>Uploading image...</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Dimensions Section */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
-                Dimensions <span className="text-xs font-normal text-gray-500">(Optional)</span>
-              </h3>
-              <div className="grid grid-cols-3 gap-3">
-                <Input
-                  label="Length (cm)"
-                  type="number"
-                  step="0.1"
-                  placeholder="0"
-                  value={formData.dimensionLength}
-                  onChange={(e) => setFormData({ ...formData, dimensionLength: e.target.value })}
-                />
-                <Input
-                  label="Width (cm)"
-                  type="number"
-                  step="0.1"
-                  placeholder="0"
-                  value={formData.dimensionWidth}
-                  onChange={(e) => setFormData({ ...formData, dimensionWidth: e.target.value })}
-                />
-                <Input
-                  label="Height (cm)"
-                  type="number"
-                  step="0.1"
-                  placeholder="0"
-                  value={formData.dimensionHeight}
-                  onChange={(e) => setFormData({ ...formData, dimensionHeight: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Description Section */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Description <span className="text-xs font-normal text-gray-500">(Optional)</span>
-              </label>
-              <textarea
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                placeholder="Enter product description, features, or specifications..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-              />
-              <p className="text-xs text-gray-500">
-                {formData.description.length} characters
-              </p>
-            </div>
-          </div>
-        </FormModal>
+          onClose={() => {
+            setIsModalOpen(false)
+            setEditingProduct(null)
+          }}
+          onSuccess={handleProductSuccess}
+          editingProduct={editingProduct}
+          stores={stores}
+        />
 
         {/* Delete Confirmation Modal */}
         <ConfirmModal
