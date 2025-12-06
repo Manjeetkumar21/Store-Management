@@ -77,7 +77,7 @@ export const AdminOrderDetails = () => {
                                     <Package size={20} className="text-blue-600 sm:w-7 sm:h-7" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">Order #{order._id.slice(-8).toUpperCase()}</h1>
+                                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">Order #{order.id.slice(-8).toUpperCase()}</h1>
                                     <p className="text-gray-500 text-xs sm:text-sm mt-1">
                                         Placed on {new Date(order.createdAt).toLocaleDateString('en-IN')} at {new Date(order.createdAt).toLocaleTimeString()}
                                     </p>
@@ -213,7 +213,7 @@ export const AdminOrderDetails = () => {
                                 <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 text-sm md:text-base">Quick Actions</h3>
                                 <Button
                                     variant="secondary"
-                                    onClick={() => navigate(`/admin/payments/${order.paymentId._id || order.paymentId}`)}
+                                    onClick={() => navigate(`/admin/payments/${order.paymentId.id || order.paymentId}`)}
                                     className="w-full flex items-center justify-center gap-2 text-sm md:text-base"
                                 >
                                     <Eye size={14} className="md:w-4 md:h-4" />

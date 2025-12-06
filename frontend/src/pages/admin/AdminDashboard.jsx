@@ -207,8 +207,8 @@ export const AdminDashboard = () => {
               {stats.recentOrders.length > 0 ? (
                 stats.recentOrders.slice(0, 6).map((order) => (
                   <div
-                    key={order._id}
-                    onClick={() => handleOrderClick(order._id)}
+                    key={order.id}
+                    onClick={() => handleOrderClick(order.id)}
                     className="p-4 hover:bg-gray-50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center justify-between">
@@ -222,7 +222,7 @@ export const AdminDashboard = () => {
                               {order.storeId?.name || "Unknown Store"}
                             </p>
                             <span className="text-xs text-gray-400">•</span>
-                            <p className="text-sm text-gray-500">#{order._id.slice(-6).toUpperCase()}</p>
+                            <p className="text-sm text-gray-500">#{order.id.slice(-6).toUpperCase()}</p>
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-xs text-gray-600">

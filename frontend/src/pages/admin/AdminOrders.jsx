@@ -44,26 +44,38 @@ export function AdminOrders() {
         }
     };
 
-    const handleConfirmAction = async () => {
-        if (!confirmModal.orderId || !confirmModal.type) return;
+   const handleConfirmAction = async () => {
+    if (!confirmModal.orderId || !confirmModal.type) return;
 
-        setIsProcessing(true);
-        try {
-            if (confirmModal.type === "confirm") {
-                await axiosInstance.patch(`/order/${confirmModal.orderId}/confirm`);
-                toast.success("Order confirmed successfully!");
-            } else if (confirmModal.type === "ship") {
-                await axiosInstance.patch(`/order/${confirmModal.orderId}/ship`);
-                toast.success("Order marked as shipped!");
-            }
-            setConfirmModal({ isOpen: false, orderId: null, type: null });
-            fetchOrders();
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to process request");
-        } finally {
-            setIsProcessing(false);
+    setIsProcessing(true);
+    try {
+        // Confirm order
+        if (confirmModal.type === "confirm") {
+            await axiosInstance.patch(`/order/${confirmModal.orderId}/status`, {
+                status: "confirmed",
+            });
+
+            toast.success("Order confirmed successfully!");
         }
-    };
+
+        // Ship order
+        else if (confirmModal.type === "ship") {
+            await axiosInstance.patch(`/order/${confirmModal.orderId}/shipping-status`, {
+                shippingStatus: "shipped",
+            });
+
+            toast.success("Order marked as shipped!");
+        }
+
+        setConfirmModal({ isOpen: false, orderId: null, type: null });
+        fetchOrders();
+    } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to process request");
+    } finally {
+        setIsProcessing(false);
+    }
+};
+
 
     const handleCancelSubmit = async () => {
         if (!cancelReason.trim()) {
@@ -98,7 +110,7 @@ export function AdminOrders() {
 
     const filteredOrders = orders.filter((order) => {
         const matchesSearch =
-            order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.storeId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesSearch;
     });
@@ -158,8 +170,8 @@ export function AdminOrders() {
                     <div className="space-y-3 md:space-y-4">
                         {filteredOrders.map((order) => (
                             <div
-                                key={order._id}
-                                onClick={() => navigate(`/admin/orders/${order._id}`)}
+                                key={order.id}
+                                onClick={() => navigate(`/admin/orders/${order.id}`)}
                                 className="bg-white rounded-lg border border-gray-200 p-4 md:p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer transform hover:-translate-y-0.5"
                             >
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -168,7 +180,7 @@ export function AdminOrders() {
                                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3 md:mb-4">
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="font-semibold text-gray-900 text-base md:text-lg">
-                                                    Order #{order._id.slice(-8).toUpperCase()}
+                                                    Order #{order.id.slice(-8).toUpperCase()}
                                                 </h3>
                                                 <p className="text-xs md:text-sm text-gray-600 mt-1">
                                                     Store: {order.storeId?.name || "Unknown"}
@@ -235,7 +247,7 @@ export function AdminOrders() {
                                                 variant="primary"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    openConfirmModal(order._id, "confirm");
+                                                    openConfirmModal(order.id, "confirm");
                                                 }}
                                                 className="w-full cursor-pointer"
                                             >
@@ -249,7 +261,7 @@ export function AdminOrders() {
                                                 variant="secondary"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    openCancelModal(order._id);
+                                                    openCancelModal(order.id);
                                                 }}
                                                 className="w-full cursor-pointer"
                                             >
@@ -265,7 +277,7 @@ export function AdminOrders() {
                                                     variant="primary"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        openConfirmModal(order._id, "ship");
+                                                        openConfirmModal(order.id, "ship");
                                                     }}
                                                     className="w-full cursor-pointer"
                                                 >
@@ -279,7 +291,7 @@ export function AdminOrders() {
                                                 variant="secondary"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/admin/payments/${order.paymentId._id}`);
+                                                    navigate(`/admin/payments/${order.paymentId.id}`);
                                                 }}
                                                 className="w-full cursor-pointer"
                                             >

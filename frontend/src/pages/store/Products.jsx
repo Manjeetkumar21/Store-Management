@@ -152,11 +152,11 @@ export const StoreProducts = () => {
   const handleAddToCart = async (product, qty) => {
     try {
       const res = await axiosInstance.post("/cart", {
-        productId: product._id,
+        productId: product.id,
         qty: qty,
       })
       const cartItems = res.data.cart.items.map(item => ({
-        productId: item.productId._id,
+        productId: item.productId.id,
         title: item.productId.name,
         brand: item.productId.brand,
         category: item.productId.category,
@@ -257,7 +257,7 @@ export const StoreProducts = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
               {filteredProducts.map((product) => (
                 <ProductCard
-                  key={product._id}
+                  key={product.id}
                   product={product}
                   onAddToCart={handleAddToCart}
                 />

@@ -112,7 +112,7 @@ export const Checkout = () => {
     setLoading(true)
     try {
       const response = await axiosInstance.post("/order", {
-        addressId: selectedAddress._id,
+        addressId: selectedAddress.id,
       })
 
       dispatch(clearCart())
@@ -271,9 +271,9 @@ export const Checkout = () => {
                     ) : (
                       addresses.map((address) => (
                         <AddressCard
-                          key={address._id}
+                          key={address.id}
                           address={address}
-                          isSelected={selectedAddress?._id === address._id}
+                          isSelected={selectedAddress?.id === address.id}
                           onSelect={setSelectedAddress}
                           selectable={true}
                           showActions={false}
