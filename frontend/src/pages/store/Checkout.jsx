@@ -146,9 +146,8 @@ export const Checkout = () => {
                 <div className="flex items-center justify-between">
                   {/* Step 1 */}
                   <div className="flex items-center gap-3 flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white transition-all ${
-                      step === "address" ? "bg-blue-600 shadow-lg shadow-blue-200" : "bg-green-500"
-                    }`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white transition-all ${step === "address" ? "bg-blue-600 shadow-lg shadow-blue-200" : "bg-green-500"
+                      }`}>
                       {step === "address" ? <MapPin size={20} /> : <CheckCircle2 size={20} />}
                     </div>
                     <div>
@@ -158,15 +157,13 @@ export const Checkout = () => {
                   </div>
 
                   {/* Connector */}
-                  <div className={`h-1 w-1/2 mx-4 rounded-full transition-all ${
-                    step === "review" ? "bg-blue-600" : "bg-gray-200"
-                  }`} />
+                  <div className={`h-1 w-1/2 mx-4 rounded-full transition-all ${step === "review" ? "bg-blue-600" : "bg-gray-200"
+                    }`} />
 
                   {/* Step 2 */}
                   <div className="flex items-center gap-3 flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white transition-all ${
-                      step === "review" ? "bg-blue-600 shadow-lg shadow-blue-200" : "bg-gray-300"
-                    }`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white transition-all ${step === "review" ? "bg-blue-600 shadow-lg shadow-blue-200" : "bg-gray-300"
+                      }`}>
                       <Package size={20} />
                     </div>
                     <div>
@@ -324,10 +321,18 @@ export const Checkout = () => {
                     </h3>
                     <div className="space-y-3">
                       {items.map((item) => (
-                        <div key={item.productId} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0">
+                        <div key={item.productId} className="flex justify-between items-start py-3 border-b border-gray-100 last:border-0">
                           <div className="flex-1">
                             <p className="font-medium text-gray-900">{item.title}</p>
                             <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                            {item.dimensions && (
+                              <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                <span>📏</span>
+                                <span>
+                                  {item.dimensions.length} × {item.dimensions.width} × {item.dimensions.height}
+                                </span>
+                              </p>
+                            )}
                           </div>
                           <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toLocaleString()}</span>
                         </div>
@@ -362,7 +367,7 @@ export const Checkout = () => {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 shadow-sm sticky top-6">
                 <h3 className="font-bold text-gray-900 text-lg mb-6">Order Summary</h3>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between text-gray-700">
                     <span>Subtotal ({items.length} items)</span>

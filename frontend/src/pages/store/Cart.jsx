@@ -16,6 +16,7 @@ const transformItem = (item) => ({
   title: item.productId.name,
   brand: item.productId.brand,
   category: item.productId.category,
+  dimensions: item.productId.dimensions, // Product dimensions
   price: item.price, // Item price in the cart structure
   quantity: item.qty, // Item quantity in the cart structure
   image: item.productId.image, // Product image URL
@@ -157,60 +158,73 @@ export const Cart = () => {
               {items.map((item) => (
                 <div
                   key={item.productId}
-                  className="flex items-center gap-5 p-5 bg-white shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200 border border-gray-100"
+                  className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 bg-white shadow-md rounded-xl hover:shadow-lg transition-shadow duration-200 border border-gray-100"
                 >
                   {/* Image/Placeholder */}
-                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 border">
-                    {/* In a real app, use the item.image URL here */}
-                    <span className="text-gray-400 text-sm">Image</span>
+                  <div className="w-full sm:w-24 h-32 sm:h-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 border overflow-hidden">
+                    {item.image ? (
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-gray-400 text-sm">No Image</span>
+                    )}
                   </div>
 
                   {/* Product Details (Enhanced) */}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 w-full sm:w-auto">
                     <h3 className="font-bold text-lg text-gray-900 truncate">{item.title}</h3>
-                    <p className="text-sm text-gray-500">Brand: **{item.brand}**</p>
-                    <p className="text-sm text-gray-500">Category: {item.category}</p>
+                    <p className="text-sm text-gray-500">Brand: <span className="font-semibold">{item.brand}</span></p>
+                    {item.dimensions && (
+                      <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <span>📏</span>
+                        <span>
+                          {item.dimensions.length} x {item.dimensions.width} x {item.dimensions.height}
+                        </span>
+                      </p>
+                    )}
                     <p className="text-xl text-blue-600 font-bold mt-1">₹{item.price}</p>
                   </div>
 
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-1 border border-gray-300 rounded-full p-1 bg-gray-50">
+                  {/* Quantity Controls & Actions - Mobile Stack */}
+                  <div className="flex sm:flex-row flex-col items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                    {/* Quantity Controls */}
+                    <div className="flex items-center justify-center gap-1 border border-gray-300 rounded-full p-1 bg-gray-50">
+                      <button
+                        onClick={() => handleUpdateQuantity(item.productId, item.quantity, -1)}
+                        className="p-2 hover:bg-gray-200 rounded-full transition-colors disabled:opacity-50"
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus size={18} />
+                      </button>
+                      <span className="px-4 text-lg font-bold text-gray-800">{item.quantity}</span>
+                      <button
+                        onClick={() => handleUpdateQuantity(item.productId, item.quantity, 1)}
+                        className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                      >
+                        <Plus size={18} />
+                      </button>
+                    </div>
+
+                    {/* Item Total */}
+                    <div className="text-center sm:text-right sm:w-24 flex-shrink-0">
+                      <p className="font-bold text-xl text-gray-900">
+                        ₹{(item.price * item.quantity)}
+                      </p>
+                    </div>
+
+                    {/* Remove Button */}
                     <button
-                      onClick={() => handleUpdateQuantity(item.productId, item.quantity, -1)}
-                      className="p-2 hover:bg-gray-200 rounded-full transition-colors disabled:opacity-50"
-                      disabled={item.quantity <= 1}
+                      onClick={() => handleRemoveItem(item.productId)}
+                      className="p-3 text-red-600 hover:bg-red-50 rounded-full transition-colors self-center"
                     >
-                      <Minus size={18} />
-                    </button>
-                    <span className="px-4 text-lg font-bold text-gray-800">{item.quantity}</span>
-                    <button
-                      onClick={() => handleUpdateQuantity(item.productId, item.quantity, 1)}
-                      className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                    >
-                      <Plus size={18} />
+                      <Trash2 size={20} />
                     </button>
                   </div>
-
-                  {/* Item Total */}
-                  <div className="text-right w-24 flex-shrink-0">
-                    <p className="font-bold text-xl text-gray-900 flex">
-                      ₹{(item.price * item.quantity)}
-                    </p>
-                  </div>
-
-                  {/* Remove Button */}
-                  <button
-                    onClick={() => handleRemoveItem(item.productId)}
-                    className="p-3 text-red-600 hover:bg-red-50 rounded-full transition-colors ml-4"
-                  >
-                    <Trash2 size={20} />
-                  </button>
                 </div>
               ))}
             </div>
 
             {/* --- Order Summary (Column 2) --- */}
-            <div className="bg-white shadow-xl rounded-xl p-8 h-fit sticky top-24 border border-blue-100">
+            <div className="bg-white shadow-xl rounded-xl p-6 sm:p-8 h-fit lg:sticky lg:top-24 border border-blue-100">
               <h2 className="text-2xl font-bold text-gray-900 mb-5 border-b pb-3">Order Summary</h2>
 
               <div className="space-y-4 mb-6">

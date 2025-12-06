@@ -193,6 +193,14 @@ export const OrderDetails = () => {
                                                 {item.productId?.name || "Product"}
                                             </h3>
                                             <p className="text-sm text-gray-600">Quantity: {item.qty}</p>
+                                            {item.productId?.dimensions && (
+                                                <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                    <span>📏</span>
+                                                    <span>
+                                                        {item.productId.dimensions.length} × {item.productId.dimensions.width} × {item.productId.dimensions.height}
+                                                    </span>
+                                                </p>
+                                            )}
                                             <p className="text-sm text-gray-600">Price: {item.price}</p>
                                         </div>
                                         <div className="text-right">

@@ -18,72 +18,78 @@ const StoreCard = ({ store, onView, onEdit, onDelete }) => {
   const totalStock = store.products?.reduce((sum, p) => sum + p.qty, 0) || 0
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-lg transition-all group cursor-pointer">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 hover:shadow-lg transition-all group cursor-pointer">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-900 text-base sm:text-lg group-hover:text-blue-600 transition-colors truncate">
             {store.name}
           </h3>
-          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-            <Building2 size={12} />
-            {store.companyId?.name || 'No Company'}
+          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1 truncate">
+            <Building2 size={12} className="flex-shrink-0" />
+            <span className="truncate">{store.companyId?.name || 'No Company'}</span>
           </p>
         </div>
-        <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+        <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors flex-shrink-0 ml-2">
           <StoreIcon size={20} className="text-blue-600" />
         </div>
       </div>
 
       <div className="flex items-center gap-1 text-xs text-gray-600 mb-4">
-        <MapPin size={12} />
+        <MapPin size={12} className="flex-shrink-0" />
         <span className="truncate">{store.location}</span>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-4">
+      <div className="flex items-center justify-around pt-3 border-t border-gray-100 mb-4">
         <div className="text-center">
-          <p className="text-xl font-bold text-blue-600">{productCount}</p>
+          <p className="text-lg sm:text-xl font-bold text-blue-600">{productCount}</p>
           <p className="text-xs text-gray-500">Products</p>
         </div>
         <div className="w-px h-8 bg-gray-200"></div>
         <div className="text-center">
-          <p className="text-xl font-bold text-green-600">{totalStock}</p>
+          <p className="text-lg sm:text-xl font-bold text-green-600">{totalStock}</p>
           <p className="text-xs text-gray-500">Stock</p>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <Button
           variant="primary"
           size="sm"
           onClick={() => onView(store)}
-          className="flex-1 flex items-center justify-center gap-1"
+          className="flex-1 flex items-center justify-center gap-1.5"
         >
           <Eye size={14} />
-          View Details
+          <span className="text-xs sm:text-sm">View Details</span>
         </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            onEdit(store)
-          }}
-          className="flex items-center justify-center gap-1"
-        >
-          <Edit2 size={14} />
-        </Button>
-        <Button
-          variant="danger"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(store)
-          }}
-          className="flex items-center justify-center gap-1"
-        >
-          <Trash2 size={14} />
-        </Button>
+        <div className="flex gap-2 sm:flex-shrink-0">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit(store)
+            }}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1"
+            title="Edit Store"
+          >
+            <Edit2 size={14} />
+            <span className="sm:hidden text-xs">Edit</span>
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(store)
+            }}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1"
+            title="Delete Store"
+          >
+            <Trash2 size={14} />
+            <span className="sm:hidden text-xs">Delete</span>
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -313,10 +319,10 @@ export const Stores = () => {
             <Button
               variant="primary"
               onClick={handleAddStore}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-auto justify-center"
             >
               <Plus size={20} />
-              Add New Store
+              <span>Add New Store</span>
             </Button>
           }
         />

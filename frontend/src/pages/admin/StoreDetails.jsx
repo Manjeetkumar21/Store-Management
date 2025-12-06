@@ -222,62 +222,62 @@ export const StoreDetails = () => {
         <MainLayout>
             <div className="space-y-6 pb-8">
                 {/* Header */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                    <div className="flex items-start gap-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
                         <button
                             onClick={() => navigate("/admin/stores")}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors mt-1"
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors self-start"
                         >
                             <ArrowLeft size={24} className="text-gray-700" />
                         </button>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-3 bg-blue-50 rounded-lg">
+                        <div className="flex-1 min-w-0 w-full">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-2">
+                                <div className="p-3 bg-blue-50 rounded-lg flex-shrink-0">
                                     <StoreIcon size={28} className="text-blue-600" />
                                 </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold text-gray-900">{store.name}</h1>
-                                    <p className="text-gray-500 text-sm mt-1">Store ID: {store.id}</p>
+                                <div className="min-w-0 flex-1">
+                                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{store.name}</h1>
+                                    <p className="text-gray-500 text-xs sm:text-sm mt-1 truncate">Store ID: {store.id}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
-                                    <Mail size={16} />
-                                    <span>{store.email}</span>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-4 text-xs sm:text-sm text-gray-600">
+                                <div className="flex items-center gap-1 truncate">
+                                    <Mail size={16} className="flex-shrink-0" />
+                                    <span className="truncate">{store.email}</span>
+                                </div>
+                                <div className="flex items-center gap-1 truncate">
+                                    <MapPin size={16} className="flex-shrink-0" />
+                                    <span className="truncate">{store.location}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <MapPin size={16} />
-                                    <span>{store.location}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <Calendar size={16} />
+                                    <Calendar size={16} className="flex-shrink-0" />
                                     <span>Created {new Date(store.createdAt).toLocaleDateString('en-IN')}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto">
                             <Button
                                 variant="secondary"
                                 onClick={() => setEditModalOpen(true)}
-                                className="flex items-center gap-2"
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2"
                             >
                                 <Edit2 size={18} />
-                                Edit
+                                <span>Edit</span>
                             </Button>
                             <Button
                                 variant="danger"
                                 onClick={() => setDeleteModalOpen(true)}
-                                className="flex items-center gap-2"
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2"
                             >
                                 <Trash2 size={18} />
-                                Delete
+                                <span>Delete</span>
                             </Button>
                         </div>
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Card 1: Blue */}
                     <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 text-white shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02]">
                         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
@@ -342,7 +342,7 @@ export const StoreDetails = () => {
                             <Building2 size={20} className="text-blue-600" />
                             <h2 className="text-xl font-bold text-gray-900">Company Information</h2>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                             <div>
                                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Company Name</label>
                                 <p className="text-gray-900 mt-1 font-semibold text-lg">{store.companyId.name}</p>
@@ -364,39 +364,39 @@ export const StoreDetails = () => {
 
                 {/* Products Section - Enhanced Cards */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 border-b border-gray-200">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-600 rounded-lg">
+                                <div className="p-2 bg-blue-600 rounded-lg flex-shrink-0">
                                     <Package size={24} className="text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900">Product Inventory</h2>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Product Inventory</h2>
                                     <p className="text-sm text-gray-600 mt-0.5">{totalProducts} {totalProducts === 1 ? 'product' : 'products'} in stock</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                                 {totalProducts > 0 && (
-                                    <div className="flex items-center gap-2 text-right border border-blue-400 px-4 py-2 rounded-full">
+                                    <div className="flex items-center justify-between sm:justify-start gap-2 text-right border border-blue-400 px-4 py-2 rounded-full">
                                         <p className="text-xs text-gray-500 uppercase tracking-wide">Total Value</p>
-                                        <p className="text-sm font-semibold text-blue-600 ">{formatCurrency(inventoryValue)}</p>
+                                        <p className="text-sm font-semibold text-blue-600">{formatCurrency(inventoryValue)}</p>
                                     </div>
                                 )}
                                 <Button
                                     variant="primary"
                                     onClick={() => setIsProductModalOpen(true)}
-                                    className="flex items-center gap-2"
+                                    className="flex items-center justify-center gap-2 w-full sm:w-auto"
                                 >
                                     <Plus size={18} />
-                                    Add Product
+                                    <span>Add Product</span>
                                 </Button>
                             </div>
                         </div>
                     </div>
 
                     {store.products && store.products.length > 0 ? (
-                        <div className="p-6 bg-gray-50">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="p-4 sm:p-6 bg-gray-50">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                                 {store.products.map((product) => (
                                     <div
                                         key={product.id}
@@ -461,6 +461,14 @@ export const StoreDetails = () => {
                                                     <span className="font-medium">{product.brand}</span>
                                                 </div>
                                             )}
+                                            {product.dimensions && (
+  <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+    <span>📏</span>
+    <span>
+      {product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height}
+    </span>
+  </p>
+)}
 
                                             {/* Description */}
                                             {product.description && (
