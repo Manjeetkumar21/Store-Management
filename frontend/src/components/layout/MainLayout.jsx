@@ -26,7 +26,7 @@ export const MainLayout = ({ children, header }) => {
         />
       )}
 
-      <div className="flex flex-col w-full h-full overflow-hidden">
+      <div className="flex flex-col w-full h-full overflow-hidden lg:ml-64">
         <TopBar onMenuClick={toggleSidebar} />
 
         {/* Page Header (Fixed) */}
@@ -34,7 +34,7 @@ export const MainLayout = ({ children, header }) => {
 
         {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {children}
           </div>
         </main>

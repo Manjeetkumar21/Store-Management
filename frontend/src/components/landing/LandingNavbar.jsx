@@ -30,7 +30,7 @@ export const LandingNavbar = ({ role, dashboardLink, logoImage }) => {
                             </div>
                         )}
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900">{role === "admin" ? "Admin Portal" : "Store Portal"}</h1>
+                            <h1 className="text-xl font-bold text-gray-900">{role === "admin" ? "TCPL Stores" : "Store Portal"}</h1>
                             <p className="text-xs text-gray-500 hidden sm:block">
                                 {role === "admin" ? "Admin" : "Store"}
                             </p>

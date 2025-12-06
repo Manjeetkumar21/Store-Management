@@ -114,6 +114,13 @@ export const AdminOrderDetails = () => {
                     <div className="lg:col-span-2 space-y-6">
                         {/* Products */}
                         <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                            <div className="mb-4 pb-4 border-b border-gray-200">
+                                <div className="flex items-center gap-2 text-gray-600 mb-1">
+                                    <Store size={16} className="md:w-5 md:h-5" />
+                                    <span className="text-xs md:text-sm font-medium">Store</span>
+                                </div>
+                                <p className="text-base md:text-lg font-bold text-gray-900">{order.storeId?.name || "N/A"}</p>
+                            </div>
                             <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                                 <Package size={20} className="md:w-6 md:h-6" />
                                 Order Items
@@ -132,6 +139,14 @@ export const AdminOrderDetails = () => {
                                                 {item.productId?.name || "Product"}
                                             </h3>
                                             <p className="text-xs md:text-sm text-gray-600">Quantity: {item.qty}</p>
+                                            {item.productId?.dimensions && (
+                                                <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                    <span>📏</span>
+                                                    <span>
+                                                        {item.productId.dimensions.length} × {item.productId.dimensions.width} × {item.productId.dimensions.height}
+                                                    </span>
+                                                </p>
+                                            )}
                                             <p className="text-xs md:text-sm text-gray-600">Price: {item.price}</p>
                                         </div>
                                         <div className="text-left sm:text-right">

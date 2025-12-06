@@ -108,7 +108,8 @@ export const AdminDashboard = () => {
     )
   }
 
-  return (
+
+    return (
     <MainLayout
       header={
         <PageHeader
@@ -120,146 +121,163 @@ export const AdminDashboard = () => {
     >
       <div className="space-y-8">
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          {/* Companies */}
+          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-blue-50 rounded-lg">
-                <Building2 className="text-blue-600" size={24} />
+                <Building2 className="text-blue-600" size={22} />
               </div>
-              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Companies</span>
+              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                Companies
+              </span>
             </div>
-            <h3 className="text-3xl font-bold text-gray-900">{stats.totalCompanies}</h3>
+            <h3 className="text-3xl font-bold">{stats.totalCompanies}</h3>
             <p className="text-gray-500 text-sm mt-1">Registered Companies</p>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
+          {/* Stores */}
+          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-green-50 rounded-lg">
-                <Store className="text-green-600" size={24} />
+                <Store className="text-green-600" size={22} />
               </div>
-              <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">Stores</span>
+              <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                Stores
+              </span>
             </div>
-            <h3 className="text-3xl font-bold text-gray-900">{stats.totalStores}</h3>
+            <h3 className="text-3xl font-bold">{stats.totalStores}</h3>
             <p className="text-gray-500 text-sm mt-1">Active Stores</p>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
+          {/* Products */}
+          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-purple-50 rounded-lg">
-                <Package className="text-purple-600" size={24} />
+                <Package className="text-purple-600" size={22} />
               </div>
-              <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">Products</span>
+              <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
+                Products
+              </span>
             </div>
-            <h3 className="text-3xl font-bold text-gray-900">{stats.totalProducts}</h3>
+            <h3 className="text-3xl font-bold">{stats.totalProducts}</h3>
             <p className="text-gray-500 text-sm mt-1">Total Products</p>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
+          {/* Orders */}
+          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-orange-50 rounded-lg">
-                <ShoppingCart className="text-orange-600" size={24} />
+                <ShoppingCart className="text-orange-600" size={22} />
               </div>
-              <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Orders</span>
+              <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
+                Orders
+              </span>
             </div>
-            <h3 className="text-3xl font-bold text-gray-900">{stats.totalOrders}</h3>
+            <h3 className="text-3xl font-bold">{stats.totalOrders}</h3>
             <p className="text-gray-500 text-sm mt-1">Total Orders</p>
           </div>
         </div>
 
+        {/* Revenue + Recent Orders */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Revenue Card */}
-          <div className="">
+
+          {/* Revenue */}
+          <div className="col-span-1">
             <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-                  <TrendingUp className="text-white" size={24} />
+                <div className="p-3 bg-white/10 rounded-lg">
+                  <TrendingUp size={24} />
                 </div>
                 <div>
                   <h3 className="font-medium text-blue-100">Total Revenue</h3>
                   <p className="text-sm text-blue-200">Lifetime earnings</p>
                 </div>
               </div>
-              <p className="text-4xl font-bold mb-2">{formatCurrency(stats.revenue)}</p>
-              <div className="flex items-center gap-2 text-blue-100 text-sm bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
+
+              <p className="text-4xl font-bold mb-2">
+                {formatCurrency(stats.revenue)}
+              </p>
+
+              <div className="flex items-center gap-2 bg-white/10 text-sm px-3 py-1 rounded-full w-fit">
                 <TrendingUp size={14} />
                 <span>Revenue Overview</span>
               </div>
             </div>
           </div>
 
-          {/* Recent Orders List */}
-          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                <ShoppingCart size={20} className="text-blue-600" />
+          {/* Recent Orders */}
+          <div className="col-span-1 lg:col-span-2 bg-white rounded-xl border shadow-sm overflow-hidden">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="font-bold flex items-center gap-2 text-gray-900">
+                <ShoppingCart className="text-blue-600" size={18} />
                 Recent Orders
               </h3>
+
               <button
-                onClick={() => navigate('/admin/orders')}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 hover:underline hover:cursor-pointer"
+                onClick={() => navigate("/admin/orders")}
+                className="text-sm text-blue-600 hover:underline flex items-center gap-1"
               >
-                View All <ArrowRight size={16} />
+                View All <ArrowRight size={14} />
               </button>
             </div>
 
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y">
               {stats.recentOrders.length > 0 ? (
-                stats.recentOrders.slice(0, 6).map((order) => (
+                stats.recentOrders.slice(0, 6).map(order => (
                   <div
                     key={order.id}
                     onClick={() => handleOrderClick(order.id)}
-                    className="p-4 hover:bg-gray-50 transition-colors cursor-pointer group"
+                    className="p-4 hover:bg-gray-50 cursor-pointer group"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-medium">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+
+                      {/* Left */}
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
                           {order.storeId?.name?.charAt(0).toUpperCase() || "?"}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-900">
-                              {order.storeId?.name || "Unknown Store"}
-                            </p>
-                            <span className="text-xs text-gray-400">•</span>
-                            <p className="text-sm text-gray-500">#{order.id.slice(-6).toUpperCase()}</p>
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-xs text-gray-600">
-                              {order.shippingAddress?.fullName || "Unknown Customer"}
-                            </p>
-                            <span className="text-xs text-gray-400">•</span>
-                            <p className="text-xs text-gray-500">
-                              {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
+
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">
+                            {order.storeId?.name}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {order.shippingAddress?.fullName} •{" "}
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-6">
+                      {/* Right */}
+                      <div className="flex items-center gap-4 justify-between sm:justify-end">
                         <div className="text-right">
-                          <p className="font-bold text-gray-900">{formatCurrency(order.totalAmount)}</p>
-                          <p className="text-xs text-gray-500">{order.products?.length || 0} items</p>
+                          <p className="font-bold">{formatCurrency(order.totalAmount)}</p>
+                          <p className="text-xs text-gray-500">{order.products?.length} items</p>
                         </div>
+
                         <OrderStatusBadge status={order.status} type="order" />
-                        <ArrowRight size={18} className="text-gray-300 group-hover:text-blue-600 transition-colors" />
+
+                        <ArrowRight
+                          size={18}
+                          className="text-gray-300 group-hover:text-blue-600"
+                        />
                       </div>
+
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="py-12 text-center">
-                  <div className="bg-gray-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Package className="text-gray-400" size={24} />
-                  </div>
-                  <p className="text-gray-900 font-medium">No recent orders</p>
-                  <p className="text-gray-500 text-sm mt-1">New orders will appear here</p>
+                <div className="py-10 text-center text-gray-500">
+                  No recent orders
                 </div>
               )}
             </div>
           </div>
+
         </div>
       </div>
     </MainLayout>
-  )
+  );
 }

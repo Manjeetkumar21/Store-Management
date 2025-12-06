@@ -8,6 +8,8 @@ import { useAppSelector } from "@/redux/hooks"
 import axiosInstance from "@/api/axiosInstance"
 import toast from "react-hot-toast"
 import { Link } from "react-router-dom"
+import {AutoCarousel}  from "@/components/landing/AutoCarousel"
+import {AutoCarouselright}  from "@/components/landing/AutoCarouselright"
 
 export const StoreLanding = () => {
     const navigate = useNavigate()
@@ -168,7 +170,42 @@ export const StoreLanding = () => {
                     </div>
                 </div>
             </section>
+                     {/* Auto Carousel Section */}
+            <div>
+                
+<section className="bg-#F6F3F4 px- sm:px-6 lg:px-5 py-0">
+  
+ 
+    <AutoCarousel
+        images={[
+            "/Screenshot 2025-12-04 152524.webp",
+            "/Screenshot 2025-12-04 151738.webp",
+            "/Screenshot 2025-12-04 152204.webp",
+            "/Screenshot 2025-12-04 152442 (1).webp",
+            "/Screenshot 2025-12-04 152604.webp",
+            "/Screenshot-2025-12-04-152732.webp"
 
+        ]}
+    />
+</section>
+</div>
+
+        <div>
+<section className="bg-#F6F3F4 px-4 sm:px-6 lg:px-5 py-10">
+  
+ 
+    <AutoCarouselright
+        images={[
+            "Screenshot 2025-12-04 152630.webp",
+            "/Screenshot 2025-12-04 151738.webp",
+            "/Screenshot 2025-12-04 152204.webp",
+            "/Screenshot-2025-12-04-152732.webp",
+            "/Screenshot-2025-12-04-152713.webp"
+
+        ]}
+    />
+</section>
+</div>
             {/* Products Section */}
             <section id="products" className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
                 <div className="max-w-7xl mx-auto">

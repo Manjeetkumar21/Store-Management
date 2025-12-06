@@ -14,7 +14,7 @@ export const AdminLanding = () => {
                         {/* Left Content */}
                         <div>
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-                                Powerful Admin
+                                TCPL Admin
                                 <span className="text-blue-600"> Control Center</span>
                             </h1>
                             <p className="text-lg sm:text-xl text-gray-600 mb-8">
@@ -38,10 +38,9 @@ export const AdminLanding = () => {
 
                         {/* Right Image */}
                         <div className="relative">
-                            <div className="aspect-square bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center p-8">
-                                <svg className="w-full h-full text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                </svg>
+                            <div className="aspect-square  rounded-2xl flex items-center justify-center p-8">
+                                <img src="tcpl-logo.webp" alt="" srcset="" />
+                                
                             </div>
                         </div>
                     </div>

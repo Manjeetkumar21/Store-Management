@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ShoppingBag, TrendingUp, Package, Clock, Loader2, AlertTriangle, ArrowRight } from "lucide-react"
+import { ShoppingBag, TrendingUp, Package, Clock, Loader2, AlertTriangle, ArrowRight, User } from "lucide-react"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { StatCard } from "@/components/dashboard/StatCard"
+import { OrderStatusBadge } from "@/components/OrderStatusBadge"
 import { formatCurrency } from "@/utils/currency"
 import axiosInstance from "@/api/axiosInstance"
 import toast from "react-hot-toast"
@@ -138,31 +139,50 @@ export const StoreDashboard = () => {
                                     <ArrowRight size={16} />
                                 </button>
                             </div>
-                            <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                            <div className="divide-y">
                                 {stats.recentOrders.length > 0 ? (
-                                    stats.recentOrders.map((order) => (
+                                    stats.recentOrders.slice(0, 6).map((order) => (
                                         <div
                                             key={order.id}
                                             onClick={() => navigate(`/store/orders/${order.id}`)}
-                                            className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-all cursor-pointer group"
+                                            className="p-4 hover:bg-gray-50 cursor-pointer group transition-colors"
                                         >
-                                            <div>
-                                                <p className="font-medium text-gray-900 group-hover:text-blue-600">Order **#{order.id.slice(-6)}**</p>
-                                                <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
-                                            </div>
-                                            <div className="text-right flex items-center gap-2">
-                                                <div>
-                                                    <p className="font-semibold text-gray-900">{formatCurrency(order.total)}</p>
-                                                    {/* Fallback for order status display */}
-                                                    <p className="text-xs text-blue-600">{order.status || 'Processing'}</p>
+                                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                                                {/* Left - Customer Info */}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold flex-shrink-0">
+                                                        {order.shippingAddress?.fullName?.charAt(0).toUpperCase() || <User size={20} />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-gray-900 truncate">
+                                                            {order.shippingAddress?.fullName || 'Customer'}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 truncate">
+                                                            Order #{order.id.slice(-6)} • {new Date(order.createdAt).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <ArrowRight size={16} className="text-gray-400 group-hover:text-blue-600 transition-colors" />
+
+                                                {/* Right - Order Details */}
+                                                <div className="flex items-center gap-4 justify-between sm:justify-end">
+                                                    <div className="text-right">
+                                                        <p className="font-bold text-gray-900">{formatCurrency(order.totalAmount || order.total)}</p>
+                                                        <p className="text-xs text-gray-500">{order.products?.length || 0} items</p>
+                                                    </div>
+
+                                                    <OrderStatusBadge status={order.status} type="order" />
+
+                                                    <ArrowRight
+                                                        size={18}
+                                                        className="text-gray-300 group-hover:text-blue-600 transition-colors"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="py-4 text-center">
-                                        <p className="text-gray-500 text-sm">No recent orders to display.</p>
+                                    <div className="py-10 text-center text-gray-500">
+                                        No recent orders to display.
                                     </div>
                                 )}
                             </div>
