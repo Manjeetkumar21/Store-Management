@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
-import { Plus, Edit2, Trash2, Package } from "lucide-react"
+import { Plus, Edit2, Trash2, Package, X } from "lucide-react"
 import toast from "react-hot-toast"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
-import { Modal, ConfirmModal } from "@/components/ui/Modal"
+import { ConfirmModal } from "@/components/ui/Modal"
+import { FormModal } from "@/components/ui/FormModal"
 import { Table } from "@/components/ui/Table"
 import axiosInstance from "@/api/axiosInstance"
 import { useAppDispatch, useAppSelector } from "@/redux/hooks"
@@ -78,8 +79,8 @@ export const Products = () => {
         return
       }
       // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB")
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error("Image size should be less than 1MB")
         return
       }
       setImageFile(file)
@@ -285,104 +286,147 @@ export const Products = () => {
         </div>
 
         {/* Add/Edit Product Modal */}
-        <Modal
+        <FormModal
           isOpen={isModalOpen}
           onClose={resetForm}
           title={editingProduct ? "Edit Product" : "Add New Product"}
-          size="lg"
+          size="xl"
+          onSubmit={handleSubmit}
+          submitLabel={editingProduct ? "Update Product" : "Add Product"}
+          cancelLabel="Cancel"
+          isProcessing={isUploadingImage}
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Product Name"
-              placeholder="Enter product name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-5">
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">Basic Information</h3>
+
               <Input
-                label="Price"
-                type="number"
-                placeholder="0.00"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                label="Product Name"
+                placeholder="Enter product name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
-              <Input
-                label="Stock"
-                type="number"
-                placeholder="0"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Category"
-                placeholder="e.g., Electronics"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              />
-              <Input
-                label="Brand"
-                placeholder="e.g., Samsung"
-                value={formData.brand}
-                onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Price"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  required
+                />
+                <Input
+                  label="Stock Quantity"
+                  type="number"
+                  placeholder="0"
+                  value={formData.stock}
+                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Category"
+                  placeholder="e.g., Electronics, Furniture"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                />
+                <Input
+                  label="Brand"
+                  placeholder="e.g., Samsung, Apple"
+                  value={formData.brand}
+                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Store <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer bg-white"
+                  value={formData.storeId}
+                  onChange={(e) => setFormData({ ...formData, storeId: e.target.value })}
+                  required
+                >
+                  <option value="">Select a store</option>
+                  {stores.map((store) => (
+                    <option key={store.id} value={store.id}>
+                      {store.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Store *</label>
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                value={formData.storeId}
-                onChange={(e) => setFormData({ ...formData, storeId: e.target.value })}
-                required
-              >
-                <option value="">Select a store</option>
-                {stores.map((store) => (
-                  <option key={store.id} value={store.id}>
-                    {store.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+            {/* Product Image Section */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Product Image</label>
               <div className="space-y-3">
                 {/* Image Preview */}
                 {(imagePreview || editingProduct?.image) && (
-                  <div className="relative w-full h-48 border-2 border-gray-200 rounded-lg overflow-hidden">
+                  <div className="relative w-full h-56 bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden group">
                     <img
                       src={imagePreview || editingProduct?.image}
                       alt="Product preview"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain p-2"
                     />
+                    {/* Remove Image Button */}
+                    {imagePreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageFile(null)
+                          setImagePreview("")
+                        }}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
                   </div>
                 )}
 
                 {/* File Input */}
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                  />
+                <div className="flex flex-col gap-2">
+                  <label className="cursor-pointer">
+                    <div className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
+                      <div className="text-center">
+                        <Package className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {imagePreview || editingProduct?.image ? "Change Image" : "Upload Image"}
+                        </span>
+                        <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP (Max 1MB)</p>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+
                   {isUploadingImage && (
-                    <span className="text-sm text-blue-600">Uploading...</span>
+                    <div className="flex items-center justify-center gap-2 text-sm text-blue-600 bg-blue-50 py-2 rounded">
+                      <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                      <span>Uploading image...</span>
+                    </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500">Supported: JPG, PNG, WEBP (Max 5MB)</p>
               </div>
             </div>
 
-            {/* Dimensions (Optional) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions (Optional)</label>
-              <div className="grid grid-cols-3 gap-4">
+            {/* Dimensions Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+                Dimensions <span className="text-xs font-normal text-gray-500">(Optional)</span>
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
                 <Input
                   label="Length (cm)"
                   type="number"
@@ -410,35 +454,24 @@ export const Products = () => {
               </div>
             </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            {/* Description Section */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Description <span className="text-xs font-normal text-gray-500">(Optional)</span>
+              </label>
               <textarea
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                placeholder="Enter product description..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                placeholder="Enter product description, features, or specifications..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
               />
+              <p className="text-xs text-gray-500">
+                {formData.description.length} characters
+              </p>
             </div>
-            <div className="flex gap-3 justify-end pt-4">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={resetForm}
-                className="cursor-pointer"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                className="cursor-pointer"
-              >
-                {editingProduct ? "Update Product" : "Add Product"}
-              </Button>
-            </div>
-          </form>
-        </Modal>
+          </div>
+        </FormModal>
 
         {/* Delete Confirmation Modal */}
         <ConfirmModal
