@@ -1,0 +1,35 @@
+{
+  "name": "functions",
+  "description": "Store Management Backend on Firebase Functions",
+  "main": "index.js",
+  "private": true,
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.8.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "path-to-regexp": "^6.2.1",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.1.0",
+    "prettier": "3.6.2"
+  }
+}

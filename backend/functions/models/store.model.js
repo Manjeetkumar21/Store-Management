@@ -1,4 +1,4 @@
-const { defineModel, DataTypes } = require('../../util/firesequelize');
+const { defineModel, DataTypes } = require('../util/firesequelize');
 const bcrypt = require('bcryptjs');
 
 const Store = defineModel('stores', {
