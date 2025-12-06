@@ -1,4 +1,4 @@
-const { defineModel, DataTypes } = require('../../util/firesequelize');
+const { defineModel, DataTypes } = require('../util/firesequelize');
 
 const Order = defineModel('orders', {
   id: { type: DataTypes.STRING },

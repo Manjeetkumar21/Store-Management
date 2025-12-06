@@ -1,4 +1,4 @@
-const { defineModel, DataTypes } = require('../../util/firesequelize');
+const { defineModel, DataTypes } = require('../util/firesequelize');
 const bcrypt = require('bcryptjs');
 
 const User = defineModel('users', {
@@ -6,7 +6,7 @@ const User = defineModel('users', {
   name: { type: DataTypes.STRING, default: '' },
   email: { type: DataTypes.STRING, required: true },
   password: { type: DataTypes.STRING, required: true },
-  role: { type: DataTypes.STRING, required: true }, // 'admin' or 'store'
+  role: { type: DataTypes.STRING, required: true },
   companyId: { type: DataTypes.STRING, default: null },
   storeId: { type: DataTypes.STRING, default: null },
   createdAt: { type: DataTypes.TIMESTAMP },
