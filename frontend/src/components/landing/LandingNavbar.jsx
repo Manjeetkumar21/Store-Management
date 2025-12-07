@@ -23,11 +23,10 @@ export const LandingNavbar = ({ role, dashboardLink, logoImage }) => {
                     {/* Logo */}
                     <Link to={role === "admin" ? "/admin" : "/store"} className="flex items-center gap-2">
                         {logoImage ? (
-                            <img src={logoImage} alt="Logo" className="h-10 w-10 rounded-lg object-cover" />
+                            <img src={logoImage} alt="Logo" className="h-10 w-auto rounded-lg object-cover" />
                         ) : (
-                            <div className="p-2 bg-blue-600 rounded-lg">
-                                <Store className="text-white" size={24} />
-                            </div>
+                            <img src="tcpl-logo.webp" alt="Logo" className="h-10 w-auto rounded-lg object-cover" />
+
                         )}
                         <div>
                             <h1 className="text-xl font-bold text-gray-900">{role === "admin" ? "TCPL Stores" : "Store Portal"}</h1>

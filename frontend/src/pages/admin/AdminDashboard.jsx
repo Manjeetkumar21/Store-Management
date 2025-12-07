@@ -124,7 +124,7 @@ export const AdminDashboard = () => {
         {/* KPI CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
           {/* Companies */}
-          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+          <div className="bg-white p-5 rounded-xl  shadow-sm hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-blue-50 rounded-lg">
                 <Building2 className="text-blue-600" size={22} />
@@ -138,7 +138,7 @@ export const AdminDashboard = () => {
           </div>
 
           {/* Stores */}
-          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+          <div className="bg-white p-5 rounded-xl  shadow-sm hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-green-50 rounded-lg">
                 <Store className="text-green-600" size={22} />
@@ -152,7 +152,7 @@ export const AdminDashboard = () => {
           </div>
 
           {/* Products */}
-          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+          <div className="bg-white p-5 rounded-xl  shadow-sm hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-purple-50 rounded-lg">
                 <Package className="text-purple-600" size={22} />
@@ -166,7 +166,7 @@ export const AdminDashboard = () => {
           </div>
 
           {/* Orders */}
-          <div className="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition">
+          <div className="bg-white p-5 rounded-xl  shadow-sm hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <div className="p-3 bg-orange-50 rounded-lg">
                 <ShoppingCart className="text-orange-600" size={22} />
@@ -208,8 +208,8 @@ export const AdminDashboard = () => {
           </div>
 
           {/* Recent Orders */}
-          <div className="col-span-1 lg:col-span-2 bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div className="p-6 border-b flex items-center justify-between">
+          <div className="col-span-1 lg:col-span-2 bg-white rounded-xl  shadow-sm overflow-hidden">
+            <div className="p-6  flex items-center justify-between">
               <h3 className="font-bold flex items-center gap-2 text-gray-900">
                 <ShoppingCart className="text-blue-600" size={18} />
                 Recent Orders
@@ -223,7 +223,7 @@ export const AdminDashboard = () => {
               </button>
             </div>
 
-            <div className="divide-y">
+            <div className="">
               {stats.recentOrders.length > 0 ? (
                 stats.recentOrders.slice(0, 6).map(order => (
                   <div

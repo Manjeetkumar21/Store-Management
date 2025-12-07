@@ -11,6 +11,73 @@ import { Link } from "react-router-dom"
 import {AutoCarousel}  from "@/components/landing/AutoCarousel"
 import {AutoCarouselright}  from "@/components/landing/AutoCarouselright"
 
+// Shimmer animation component
+const Shimmer = () => (
+    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]">
+        <div className="h-full w-full bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+    </div>
+)
+
+// Hero Skeleton Component
+const HeroSkeleton = () => (
+    <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                {/* Left Content Skeleton */}
+                <div>
+                    {/* Title skeleton */}
+                    <div className="space-y-4 mb-6">
+                        <div className="relative overflow-hidden bg-gray-200 rounded-lg h-14 w-full">
+                            <Shimmer />
+                        </div>
+                        <div className="relative overflow-hidden bg-gray-200 rounded-lg h-14 w-5/6">
+                            <Shimmer />
+                        </div>
+                        <div className="relative overflow-hidden bg-gray-200 rounded-lg h-14 w-4/6">
+                            <Shimmer />
+                        </div>
+                    </div>
+                    
+                    {/* Subtitle skeleton */}
+                    <div className="space-y-3 mb-8">
+                        <div className="relative overflow-hidden bg-gray-200 rounded-lg h-6 w-full">
+                            <Shimmer />
+                        </div>
+                        <div className="relative overflow-hidden bg-gray-200 rounded-lg h-6 w-4/5">
+                            <Shimmer />
+                        </div>
+                    </div>
+                    
+                    {/* Buttons skeleton */}
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="relative overflow-hidden bg-gray-200 rounded-lg h-14 w-full sm:w-48">
+                            <Shimmer />
+                        </div>
+                        <div className="relative overflow-hidden bg-gray-200 rounded-lg h-14 w-full sm:w-48">
+                            <Shimmer />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Image Skeleton */}
+                <div className="relative">
+                    <div className="aspect-square bg-gray-200 rounded-2xl relative overflow-hidden">
+                        <Shimmer />
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style jsx>{`
+            @keyframes shimmer {
+                100% {
+                    transform: translateX(100%);
+                }
+            }
+        `}</style>
+    </section>
+)
+
 export const StoreLanding = () => {
     const navigate = useNavigate()
     const { user } = useAppSelector((state) => state.auth)
@@ -31,6 +98,8 @@ export const StoreLanding = () => {
         } catch (error) {
             console.error("Error fetching store details:", error)
             // Use defaults if fetch fails
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -41,8 +110,6 @@ export const StoreLanding = () => {
         } catch (error) {
             console.error("Error fetching products:", error)
             toast.error("Failed to load products")
-        } finally {
-            setLoading(false)
         }
     }
 
@@ -57,58 +124,62 @@ export const StoreLanding = () => {
         <div className="min-h-screen bg-gray-50">
             <LandingNavbar role="store" dashboardLink="/store/dashboard" logoImage={logoImage} />
 
-            {/* Hero Section */}
-            <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                        {/* Left Content */}
-                        <div>
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-                                {heroHeading}
-                            </h1>
-                            <p className="text-lg sm:text-xl text-gray-600 mb-8">
-                                {heroSubheading}
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <Link
-                                    to="/store/dashboard"
-                                    className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
-                                >
-                                    Access Dashboard
-                                </Link>
-                                <Link
-                                    to="/store/products"
-                                    className="inline-flex items-center justify-center px-8 py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-semibold text-lg"
-                                >
-                                    View Products
-                                </Link>
+            {/* Hero Section - Show skeleton while loading */}
+            {loading ? (
+                <HeroSkeleton />
+            ) : (
+                <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                            {/* Left Content */}
+                            <div>
+                                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                                    {heroHeading}
+                                </h1>
+                                <p className="text-lg sm:text-xl text-gray-600 mb-8">
+                                    {heroSubheading}
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <Link
+                                        to="/store/dashboard"
+                                        className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+                                    >
+                                        Access Dashboard
+                                    </Link>
+                                    <Link
+                                        to="/store/products"
+                                        className="inline-flex items-center justify-center px-8 py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-semibold text-lg"
+                                    >
+                                        View Products
+                                    </Link>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Right Image */}
-                        <div className="relative">
-                            <div className="aspect-square bg-gradient-to-br from-green-100 to-blue-50 rounded-2xl flex items-center justify-center p-8">
-                                <img
-                                    src={heroImage}
-                                    alt="Store Management Illustration"
-                                    className="w-full h-full object-contain"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none'
-                                        e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-48 h-48 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg></div>'
-                                    }}
-                                />
+                            {/* Right Image */}
+                            <div className="relative">
+                                <div className="aspect-square bg-gradient-to-br rounded-2xl flex items-center justify-center p-8">
+                                    <img
+                                        src={heroImage}
+                                        alt="Store Management Illustration"
+                                        className="w-full h-full object-contain"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none'
+                                            e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-48 h-48 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg></div>'
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* Features Section */}
             <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                            Why Choose StoreHub?
+                            Why Choose TCPL Stores?
                         </h2>
                         <p className="text-lg text-gray-600">
                             Everything you need to run your store efficiently
@@ -170,42 +241,37 @@ export const StoreLanding = () => {
                     </div>
                 </div>
             </section>
-                     {/* Auto Carousel Section */}
+
+            {/* Auto Carousel Section */}
             <div>
-                
-<section className="bg-#F6F3F4 px- sm:px-6 lg:px-5 py-0">
-  
- 
-    <AutoCarousel
-        images={[
-            "/Screenshot 2025-12-04 152524.webp",
-            "/Screenshot 2025-12-04 151738.webp",
-            "/Screenshot 2025-12-04 152204.webp",
-            "/Screenshot 2025-12-04 152442 (1).webp",
-            "/Screenshot 2025-12-04 152604.webp",
-            "/Screenshot-2025-12-04-152732.webp"
+                <section className="bg-#F6F3F4 px- sm:px-6 lg:px-5 py-0">
+                    <AutoCarousel
+                        images={[
+                            "/Screenshot 2025-12-04 152524.webp",
+                            "/Screenshot 2025-12-04 151738.webp",
+                            "/Screenshot 2025-12-04 152204.webp",
+                            "/Screenshot 2025-12-04 152442 (1).webp",
+                            "/Screenshot 2025-12-04 152604.webp",
+                            "/Screenshot-2025-12-04-152732.webp"
+                        ]}
+                    />
+                </section>
+            </div>
 
-        ]}
-    />
-</section>
-</div>
+            <div>
+                <section className="bg-#F6F3F4 px-4 sm:px-6 lg:px-5 py-10">
+                    <AutoCarouselright
+                        images={[
+                            "Screenshot 2025-12-04 152630.webp",
+                            "/Screenshot 2025-12-04 151738.webp",
+                            "/Screenshot 2025-12-04 152204.webp",
+                            "/Screenshot-2025-12-04-152732.webp",
+                            "/Screenshot-2025-12-04-152713.webp"
+                        ]}
+                    />
+                </section>
+            </div>
 
-        <div>
-<section className="bg-#F6F3F4 px-4 sm:px-6 lg:px-5 py-10">
-  
- 
-    <AutoCarouselright
-        images={[
-            "Screenshot 2025-12-04 152630.webp",
-            "/Screenshot 2025-12-04 151738.webp",
-            "/Screenshot 2025-12-04 152204.webp",
-            "/Screenshot-2025-12-04-152732.webp",
-            "/Screenshot-2025-12-04-152713.webp"
-
-        ]}
-    />
-</section>
-</div>
             {/* Products Section */}
             <section id="products" className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
                 <div className="max-w-7xl mx-auto">
