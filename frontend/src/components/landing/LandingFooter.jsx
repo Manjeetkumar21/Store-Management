@@ -1,7 +1,19 @@
 import { Store, Mail, Phone, MapPin } from "lucide-react"
 
-export const LandingFooter = ({ role }) => {
+export const LandingFooter = ({ role, storeData }) => {
     const currentYear = new Date().getFullYear()
+
+    // Get footer data from store
+    const footerData = storeData?.landingPage?.footer || {}
+    const footerLogo = footerData.logoImage || ""
+    const footerEmail = footerData.email || "support@storehub.com"
+    const footerPhone = footerData.phone || "+1 (555) 123-4567"
+    const footerAddress = footerData.address || {}
+    const addressText = footerAddress.street
+        ? `${footerAddress.street}, ${footerAddress.city || ''}, ${footerAddress.state || ''} ${footerAddress.zipCode || ''}, ${footerAddress.country || ''}`.replace(/,\s*,/g, ',').trim()
+        : "123 Business St, City, Country"
+
+    const storeName = storeData?.name || "StoreHub"
 
     return (
         <footer className="bg-gray-900 text-gray-300">
@@ -10,10 +22,21 @@ export const LandingFooter = ({ role }) => {
                     {/* Brand */}
                     <div>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="p-2 bg-blue-600 rounded-lg">
+                            {footerLogo ? (
+                                <img
+                                    src={footerLogo}
+                                    alt={`${storeName} logo`}
+                                    className="h-10 w-auto object-contain"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none'
+                                        e.target.nextElementSibling.style.display = 'flex'
+                                    }}
+                                />
+                            ) : null}
+                            <div className={`p-2 bg-blue-600 rounded-lg ${footerLogo ? 'hidden' : 'flex'}`}>
                                 <Store className="text-white" size={20} />
                             </div>
-                            <h3 className="text-xl font-bold text-white">StoreHub</h3>
+                            <h3 className="text-xl font-bold text-white">{storeName}</h3>
                         </div>
                         <p className="text-sm text-gray-400">
                             {role === "admin"
@@ -46,16 +69,16 @@ export const LandingFooter = ({ role }) => {
                         <h4 className="text-white font-semibold mb-4">Contact Us</h4>
                         <ul className="space-y-3 text-sm">
                             <li className="flex items-center gap-2">
-                                <Mail size={16} className="text-blue-400" />
-                                <span>support@storehub.com</span>
+                                <Mail size={16} className="text-blue-400 flex-shrink-0" />
+                                <span className="break-all">{footerEmail}</span>
                             </li>
                             <li className="flex items-center gap-2">
-                                <Phone size={16} className="text-blue-400" />
-                                <span>+1 (555) 123-4567</span>
+                                <Phone size={16} className="text-blue-400 flex-shrink-0" />
+                                <span>{footerPhone}</span>
                             </li>
-                            <li className="flex items-center gap-2">
-                                <MapPin size={16} className="text-blue-400" />
-                                <span>123 Business St, City, Country</span>
+                            <li className="flex items-start gap-2">
+                                <MapPin size={16} className="text-blue-400 flex-shrink-0 mt-0.5" />
+                                <span className="flex-1">{addressText}</span>
                             </li>
                         </ul>
                     </div>
@@ -63,9 +86,10 @@ export const LandingFooter = ({ role }) => {
 
                 {/* Bottom Bar */}
                 <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-                    <p>&copy; {currentYear} StoreHub. All rights reserved.</p>
+                    <p>&copy; {currentYear} {storeName}. All rights reserved.</p>
                 </div>
             </div>
         </footer>
     )
 }
+

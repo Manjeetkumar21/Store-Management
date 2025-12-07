@@ -24,6 +24,7 @@ const Store = defineModel('stores', {
         logoImage: ''
       },
       footer: {
+        logoImage: '',
         address: {
           street: '',
           city: '',

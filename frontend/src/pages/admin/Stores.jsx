@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Edit2, Trash2, MapPin, Building2, Store as StoreIcon, Eye, ChevronDown, ChevronUp } from "lucide-react"
+import { Plus, Edit2, Trash2, MapPin, Building2, Store as StoreIcon, Eye, ChevronDown, ChevronUp, X, Image as ImageIcon } from "lucide-react"
 import toast from "react-hot-toast"
 import { MainLayout } from "@/components/layout/MainLayout"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -140,6 +140,15 @@ export const Stores = () => {
     footer: false
   })
 
+  // Image upload states
+  const [navbarImageFile, setNavbarImageFile] = useState(null)
+  const [navbarImagePreview, setNavbarImagePreview] = useState("")
+  const [footerImageFile, setFooterImageFile] = useState(null)
+  const [footerImagePreview, setFooterImagePreview] = useState("")
+  const [heroImageFile, setHeroImageFile] = useState(null)
+  const [heroImagePreview, setHeroImagePreview] = useState("")
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
   }
@@ -208,6 +217,9 @@ export const Stores = () => {
         }
       }
     })
+    setNavbarImagePreview(store.landingPage?.navbar?.logoImage || "")
+    setFooterImagePreview(store.landingPage?.footer?.logoImage || "")
+    setHeroImagePreview(store.landingPage?.hero?.heroImage || "")
     setIsModalOpen(true)
   }
 
@@ -267,11 +279,161 @@ export const Stores = () => {
     setIsModalOpen(true)
   }
 
+  // Handle navbar image file selection
+  const handleNavbarImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file")
+        return
+      }
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error("Image size should be less than 1MB")
+        return
+      }
+      setNavbarImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setNavbarImagePreview(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Handle footer image file selection
+  const handleFooterImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file")
+        return
+      }
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error("Image size should be less than 1MB")
+        return
+      }
+      setFooterImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setFooterImagePreview(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Upload navbar image (BASE64)
+  const uploadNavbarImage = async (storeId) => {
+    if (!navbarImageFile) return null
+
+    setIsUploadingImage(true)
+    try {
+      // Convert to base64
+      const reader = new FileReader()
+      const base64Data = await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(navbarImageFile)
+      })
+
+      const response = await axiosInstance.put(`/upload/store/${storeId}/upload-navbar`, {
+        imageData: base64Data,
+        fileName: navbarImageFile.name,
+        mimeType: navbarImageFile.type
+      })
+
+      return response.data.data.landingPage?.navbar?.logoImage
+    } catch (error) {
+      console.error('❌ Navbar image upload error:', error)
+      toast.error("Failed to upload navbar logo")
+      return null
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
+  // Upload footer image (BASE64)
+  const uploadFooterImage = async (storeId) => {
+    if (!footerImageFile) return null
+
+    setIsUploadingImage(true)
+    try {
+      // Convert to base64
+      const reader = new FileReader()
+      const base64Data = await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(footerImageFile)
+      })
+
+      const response = await axiosInstance.put(`/upload/store/${storeId}/upload-footer`, {
+        imageData: base64Data,
+        fileName: footerImageFile.name,
+        mimeType: footerImageFile.type
+      })
+
+      return response.data.data.landingPage?.footer?.logoImage
+    } catch (error) {
+      console.error('❌ Footer image upload error:', error)
+      toast.error("Failed to upload footer logo")
+      return null
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
+  // Handle hero image file selection
+  const handleHeroImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file")
+        return
+      }
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error("Image size should be less than 1MB")
+        return
+      }
+      setHeroImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setHeroImagePreview(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Upload hero image (BASE64)
+  const uploadHeroImage = async (storeId) => {
+    if (!heroImageFile) return null
+
+    setIsUploadingImage(true)
+    try {
+      // Convert to base64
+      const reader = new FileReader()
+      const base64Data = await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(heroImageFile)
+      })
+
+      const response = await axiosInstance.put(`/upload/store/${storeId}/upload-hero`, {
+        imageData: base64Data,
+        fileName: heroImageFile.name,
+        mimeType: heroImageFile.type
+      })
+
+      return response.data.data.landingPage?.hero?.heroImage
+    } catch (error) {
+      console.error('❌ Hero image upload error:', error)
+      toast.error("Failed to upload hero image")
+      return null
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsProcessing(true)
 
     try {
+      let storeId
+      let storeData
+
       if (isEditMode && selectedStore) {
         // Update store
         const updateData = { ...formData }
@@ -279,12 +441,58 @@ export const Stores = () => {
           delete updateData.password
         }
         const response = await axiosInstance.put(`/store/${selectedStore.id}`, updateData)
-        dispatch(updateStore(response.data.data))
+        storeData = response.data.data
+        storeId = selectedStore.id
+
+        // Upload images if new ones selected
+        if (heroImageFile) {
+          const heroUrl = await uploadHeroImage(storeId)
+          if (heroUrl) {
+            storeData.landingPage.hero.heroImage = heroUrl
+          }
+        }
+        if (navbarImageFile) {
+          const navbarUrl = await uploadNavbarImage(storeId)
+          if (navbarUrl) {
+            storeData.landingPage.navbar.logoImage = navbarUrl
+          }
+        }
+        if (footerImageFile) {
+          const footerUrl = await uploadFooterImage(storeId)
+          if (footerUrl) {
+            storeData.landingPage.footer.logoImage = footerUrl
+          }
+        }
+
+        dispatch(updateStore(storeData))
         toast.success("Store updated successfully!")
       } else {
         // Create new store
         const response = await axiosInstance.post("/store", formData)
-        dispatch(addStore(response.data.data))
+        storeData = response.data.data
+        storeId = storeData.id
+
+        // Upload images if selected
+        if (heroImageFile) {
+          const heroUrl = await uploadHeroImage(storeId)
+          if (heroUrl) {
+            storeData.landingPage.hero.heroImage = heroUrl
+          }
+        }
+        if (navbarImageFile) {
+          const navbarUrl = await uploadNavbarImage(storeId)
+          if (navbarUrl) {
+            storeData.landingPage.navbar.logoImage = navbarUrl
+          }
+        }
+        if (footerImageFile) {
+          const footerUrl = await uploadFooterImage(storeId)
+          if (footerUrl) {
+            storeData.landingPage.footer.logoImage = footerUrl
+          }
+        }
+
+        dispatch(addStore(storeData))
         toast.success("Store created successfully!")
       }
       setIsModalOpen(false)
@@ -304,6 +512,13 @@ export const Stores = () => {
       location: "",
       companyId: "",
     })
+    setNavbarImageFile(null)
+    setNavbarImagePreview("")
+    setFooterImageFile(null)
+    setFooterImagePreview("")
+    setHeroImageFile(null)
+    setHeroImagePreview("")
+    setIsUploadingImage(false)
     setSelectedStore(null)
     setIsEditMode(false)
   }
@@ -442,6 +657,52 @@ export const Stores = () => {
               </button>
               {expandedSections.hero && (
                 <div className="p-4 space-y-3 bg-white">
+                  {/* Hero Image Upload */}
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Hero Image</label>
+                    {/* Image Preview */}
+                    {(heroImagePreview || formData.landingPage?.hero?.heroImage) && (
+                      <div className="relative w-full h-48 bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden group mb-3">
+                        <img
+                          src={heroImagePreview || formData.landingPage?.hero?.heroImage}
+                          alt="Hero image preview"
+                          className="w-full h-full object-cover"
+                        />
+                        {heroImagePreview && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHeroImageFile(null)
+                              setHeroImagePreview("")
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* File Input */}
+                    <label className="cursor-pointer">
+                      <div className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
+                        <div className="text-center">
+                          <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                          <span className="text-sm font-medium text-gray-700">
+                            {heroImagePreview || formData.landingPage?.hero?.heroImage ? "Change Image" : "Upload Image"}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP (Max 1MB)</p>
+                        </div>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleHeroImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
                   <Input
                     label="Hero Heading"
                     value={formData.landingPage?.hero?.heading || ""}
@@ -502,19 +763,55 @@ export const Stores = () => {
                 {expandedSections.navbar ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
               </button>
               {expandedSections.navbar && (
-                <div className="p-4 bg-white">
-                  <Input
-                    label="Logo Image URL"
-                    value={formData.landingPage?.navbar?.logoImage || ""}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      landingPage: {
-                        ...formData.landingPage,
-                        navbar: { logoImage: e.target.value }
-                      }
-                    })}
-                    placeholder="/images/logo.png"
-                  />
+                <div className="p-4 bg-white space-y-3">
+                  {/* Image Preview */}
+                  {(navbarImagePreview || formData.landingPage?.navbar?.logoImage) && (
+                    <div className="relative w-full h-40 bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden group">
+                      <img
+                        src={navbarImagePreview || formData.landingPage?.navbar?.logoImage}
+                        alt="Navbar logo preview"
+                        className="w-full h-full object-contain p-2"
+                      />
+                      {navbarImagePreview && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNavbarImageFile(null)
+                            setNavbarImagePreview("")
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* File Input */}
+                  <label className="cursor-pointer">
+                    <div className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
+                      <div className="text-center">
+                        <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {navbarImagePreview || formData.landingPage?.navbar?.logoImage ? "Change Logo" : "Upload Logo"}
+                        </span>
+                        <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP (Max 1MB)</p>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleNavbarImageChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {isUploadingImage && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-blue-600 bg-blue-50 py-2 rounded">
+                      <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                      <span>Uploading image...</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -536,6 +833,52 @@ export const Stores = () => {
               </button>
               {expandedSections.footer && (
                 <div className="p-4 space-y-3 bg-white">
+                  {/* Footer Logo Upload */}
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Footer Logo</label>
+                    {/* Image Preview */}
+                    {(footerImagePreview || formData.landingPage?.footer?.logoImage) && (
+                      <div className="relative w-full h-40 bg-white border-2 border-dashed border-gray-300 rounded-lg overflow-hidden group mb-3">
+                        <img
+                          src={footerImagePreview || formData.landingPage?.footer?.logoImage}
+                          alt="Footer logo preview"
+                          className="w-full h-full object-contain p-2"
+                        />
+                        {footerImagePreview && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFooterImageFile(null)
+                              setFooterImagePreview("")
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* File Input */}
+                    <label className="cursor-pointer">
+                      <div className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
+                        <div className="text-center">
+                          <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                          <span className="text-sm font-medium text-gray-700">
+                            {footerImagePreview || formData.landingPage?.footer?.logoImage ? "Change Logo" : "Upload Logo"}
+                          </span>
+                          <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP (Max 1MB)</p>
+                        </div>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFooterImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
                   <Input
                     label="Street Address"
                     value={formData.landingPage?.footer?.address?.street || ""}
@@ -593,7 +936,7 @@ export const Stores = () => {
                           ...formData.landingPage,
                           footer: {
                             ...formData.landingPage?.footer,
-                            address: { ...formData.landingPage?.footer?.address, zipCode: e.target.value }
+                            address: { ...formData.ladingPage?.footer?.address, zipCode: e.target.value }
                           }
                         }
                       })}

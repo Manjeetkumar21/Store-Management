@@ -1,10 +1,11 @@
 require("dotenv").config();
-const functions = require("firebase-functions");
+const { onRequest } = require("firebase-functions/v2/https");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db.js");
 
+/* ✅ ROUTES */
 const authRoutes = require("./src/routes/auth.routes.js");
 const companyRoutes = require("./src/routes/company.routes.js");
 const storeRoutes = require("./src/routes/store.routes.js");
@@ -18,19 +19,20 @@ const uploadRoutes = require("./src/routes/upload.routes.js");
 
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
+
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
 connectDB();
 
 app.get("/", (req, res) => {
-  res.json({ message: "Store Management Backend Running on Firebase" });
+  res.json({ message: "✅ Store Management Backend Running on Firebase Gen 2" });
 });
 
 app.get("/health", (req, res) => {
-  res.json({ message: "Health Check OK" });
+  res.json({ message: "✅ Health Check OK" });
 });
 
 app.use("/auth", authRoutes);
@@ -45,23 +47,23 @@ app.use("/stats", statsRoutes);
 app.use("/upload", uploadRoutes);
 
 app.use((err, req, res, next) => {
-  console.error("Error:", err);
-  
+  console.error("❌ Error:", err);
+
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
-  
+
   res.status(statusCode).json({
     success: false,
     message,
-    error: process.env.NODE_ENV === "development" ? err.stack : undefined
+    error: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 });
 
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: "Route not found"
+    message: "❌ Route not found",
   });
 });
 
-exports.api = functions.https.onRequest(app);
+exports.api = onRequest(app);

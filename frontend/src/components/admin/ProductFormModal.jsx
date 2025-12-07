@@ -78,22 +78,33 @@ export const ProductFormModal = ({
         }
     }
 
-    // Upload image to backend
+    // Upload image to backend (BASE64)
     const uploadProductImage = async (productId) => {
         if (!imageFile) return null
 
         setIsUploadingImage(true)
         try {
-            const formDataUpload = new FormData()
-            formDataUpload.append('image', imageFile)
-
-            const response = await axiosInstance.put(`/upload/product/${productId}/upload`, formDataUpload, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+            // Convert file to base64
+            const reader = new FileReader()
+            const base64Data = await new Promise((resolve, reject) => {
+                reader.onloadend = () => resolve(reader.result)
+                reader.onerror = reject
+                reader.readAsDataURL(imageFile)
             })
 
+            console.log('📤 Uploading image as base64...')
+
+            // Send as JSON with base64 data
+            const response = await axiosInstance.put(`/upload/product/${productId}/upload`, {
+                imageData: base64Data,
+                fileName: imageFile.name,
+                mimeType: imageFile.type
+            })
+
+            console.log('✅ Image uploaded successfully')
             return response.data.data.image
         } catch (error) {
-            console.error('Image upload error:', error)
+            console.error('❌ Image upload error:', error)
             toast.error("Failed to upload image")
             return null
         } finally {

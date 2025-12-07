@@ -664,7 +664,13 @@ function defineModel(name, attributes, options = {}) {
         const attr = normalized_attributes[key]
         // Handle TIMESTAMP type with Firebase FieldValue.serverTimestamp()
         if (attr.type === 'timestamp') {
-          ret[key] = admin.firestore.FieldValue.serverTimestamp()
+          // Check if admin is initialized before using serverTimestamp
+          if (admin && admin.firestore && admin.firestore.FieldValue) {
+            ret[key] = admin.firestore.FieldValue.serverTimestamp()
+          } else {
+            // Fallback to current timestamp if admin not initialized
+            ret[key] = new Date()
+          }
         } else {
           const defaultValue = attr.default
           // If default is a function, call it to get the actual value
@@ -692,7 +698,11 @@ function defineModel(name, attributes, options = {}) {
     }
     // Automatically set updatedAt to server timestamp if it's a TIMESTAMP field
     if (normalized_attributes.updatedAt && normalized_attributes.updatedAt.type === 'timestamp') {
-      ret.updatedAt = admin.firestore.FieldValue.serverTimestamp()
+      if (admin && admin.firestore && admin.firestore.FieldValue) {
+        ret.updatedAt = admin.firestore.FieldValue.serverTimestamp()
+      } else {
+        ret.updatedAt = new Date()
+      }
     }
     return ret
   }
