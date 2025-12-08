@@ -6,15 +6,15 @@ export const LandingFooter = ({ role, storeData }) => {
   // Get footer data from store
   const footerData = storeData?.landingPage?.footer || {};
   const footerLogo = footerData.logoImage || "";
+  const footerHeading = footerData.footerHeading || "Contact Us";
   const footerEmail = footerData.email || "support@storehub.com";
   const footerPhone = footerData.phone || "+1 (555) 123-4567";
   const footerAddress = footerData.address || {};
   const addressText = footerAddress.street
-    ? `${footerAddress.street}, ${footerAddress.city || ""}, ${
-        footerAddress.state || ""
+    ? `${footerAddress.street}, ${footerAddress.city || ""}, ${footerAddress.state || ""
       } ${footerAddress.zipCode || ""}, ${footerAddress.country || ""}`
-        .replace(/,\s*,/g, ",")
-        .trim()
+      .replace(/,\s*,/g, ",")
+      .trim()
     : "123 Business St, City, Country";
 
   const storeName = storeData?.name || "TCPL Stores";
@@ -55,7 +55,7 @@ export const LandingFooter = ({ role, storeData }) => {
 
           {/* Contact */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Contact Us</h4>
+            <h4 className="text-white font-semibold mb-4">{footerHeading}</h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Mail size={16} className="text-blue-400 flex-shrink-0" />

@@ -8,8 +8,8 @@ import { useAppSelector } from "@/redux/hooks"
 import axiosInstance from "@/api/axiosInstance"
 import toast from "react-hot-toast"
 import { Link } from "react-router-dom"
-import {AutoCarousel}  from "@/components/landing/AutoCarousel"
-import {AutoCarouselright}  from "@/components/landing/AutoCarouselright"
+import { AutoCarousel } from "@/components/landing/AutoCarousel"
+import { AutoCarouselright } from "@/components/landing/AutoCarouselright"
 
 // Shimmer animation component
 const Shimmer = () => (
@@ -37,7 +37,7 @@ const HeroSkeleton = () => (
                             <Shimmer />
                         </div>
                     </div>
-                    
+
                     {/* Subtitle skeleton */}
                     <div className="space-y-3 mb-8">
                         <div className="relative overflow-hidden bg-gray-200 rounded-lg h-6 w-full">
@@ -47,7 +47,7 @@ const HeroSkeleton = () => (
                             <Shimmer />
                         </div>
                     </div>
-                    
+
                     {/* Buttons skeleton */}
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="relative overflow-hidden bg-gray-200 rounded-lg h-14 w-full sm:w-48">
@@ -67,7 +67,7 @@ const HeroSkeleton = () => (
                 </div>
             </div>
         </div>
-        
+
         <style jsx>{`
             @keyframes shimmer {
                 100% {
@@ -119,10 +119,11 @@ export const StoreLanding = () => {
     const heroSubheading = landingData.hero?.subheading || "Manage inventory, track orders, and grow your business with our comprehensive store management platform. Everything you need in one place."
     const heroImage = landingData.hero?.heroImage || "/store_hero_illustration.png"
     const logoImage = landingData.navbar?.logoImage || ""
+    const navbarHeading = landingData.navbar?.navbarHeading || ""
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <LandingNavbar role="store" dashboardLink="/store/dashboard" logoImage={logoImage} />
+            <LandingNavbar role="store" dashboardLink="/store/dashboard" logoImage={logoImage} navbarHeading={navbarHeading} />
 
             {/* Hero Section - Show skeleton while loading */}
             {loading ? (
