@@ -133,18 +133,40 @@ const getAllOrders = async (req, res) => {
     if (req.role !== "admin") 
       return errorResponse(res, 403, "Only admin can view all orders");
 
+    // Fetch all orders
     const orders = await Order.findAll();
-    
-    const sortedOrders = formatDocs(orders).sort((a, b) => 
-      new Date(b.createdAt) - new Date(a.createdAt)
+    const formattedOrders = formatDocs(orders);
+
+    // Fetch all stores
+    const stores = await Store.findAll();
+    const formattedStores = formatDocs(stores);
+
+    // Create store lookup map
+    const storeMap = {};
+    formattedStores.forEach(store => {
+      storeMap[store.id] = store;
+    });
+
+    // Attach store details to each order
+    const ordersWithStore = formattedOrders.map(order => ({
+      ...order,
+      store: storeMap[order.storeId] || null
+    }));
+
+    // Sort by createdAt
+    const sortedOrders = ordersWithStore.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
 
     return successResponse(res, 200, "All orders fetched", sortedOrders);
+
   } catch (error) {
     console.error("[GET ALL ORDERS ERROR]:", error);
     return errorResponse(res, 500, "Internal server error");
   }
 };
+
+
 
 
 // ================= GET ORDER BY ID =======================

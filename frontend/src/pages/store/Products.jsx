@@ -199,7 +199,7 @@ export const StoreProducts = () => {
       <div className="h-full">
 
         {/* Header Section */}
-        <div className="sticky top-0 z-40">
+        <div className=" top-0 z-40 bg-white shadow-md">
           <div className="max-w-full mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
@@ -241,7 +241,8 @@ export const StoreProducts = () => {
         </div>
 
         {/* Content Grid */}
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-8">
+
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(6)].map((_, i) => <ProductSkeleton key={i} />)}

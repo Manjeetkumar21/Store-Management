@@ -1,4 +1,4 @@
-const { Payment, Order } = require("../../models/firestore");
+const { Payment, Order, Store } = require("../../models/firestore");
 const { formatDoc, formatDocs } = require("../../util/firestore-helpers");
 const { successResponse, errorResponse } = require("../utils/responseHandler");
 
@@ -18,13 +18,21 @@ const initiatePayment = async (req, res) => {
 
     const orderData = order.getData();
     if (orderData.status !== "confirmed") {
-      return errorResponse(res, 400, "Order must be confirmed before initiating payment");
+      return errorResponse(
+        res,
+        400,
+        "Order must be confirmed before initiating payment"
+      );
     }
 
     // Check if payment already exists
     const existingPayment = await Payment.findOne({ where: { orderId } });
     if (existingPayment) {
-      return errorResponse(res, 400, "Payment already initiated for this order");
+      return errorResponse(
+        res,
+        400,
+        "Payment already initiated for this order"
+      );
     }
 
     const payment = await Payment.create({
@@ -32,13 +40,19 @@ const initiatePayment = async (req, res) => {
       amount: orderData.totalAmount,
       paymentMethod: "qr_code",
       status: "pending",
-      qrCodeUrl: process.env.PAYMENT_QR_URL || "https://example.com/qr-code.png",
+      qrCodeUrl:
+        process.env.PAYMENT_QR_URL || "https://example.com/qr-code.png",
     });
 
     // Update order with payment reference
     await order.update({ paymentId: payment.getId() });
 
-    return successResponse(res, 201, "Payment initiated successfully", formatDoc(payment));
+    return successResponse(
+      res,
+      201,
+      "Payment initiated successfully",
+      formatDoc(payment)
+    );
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -72,7 +86,12 @@ const getPaymentByOrderId = async (req, res) => {
       }
     }
 
-    return successResponse(res, 200, "Payment fetched successfully", paymentData);
+    return successResponse(
+      res,
+      200,
+      "Payment fetched successfully",
+      paymentData
+    );
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -95,6 +114,12 @@ const getPaymentById = async (req, res) => {
       const order = await Order.findOne({ id: paymentData.orderId });
       if (order) {
         paymentData.orderId = formatDoc(order);
+        console.log("paymnet....",paymentData.storeId);
+        
+      }
+       let store = await Store.findOne({ id: paymentData.storeId });
+      if (store) {
+        paymentData.store = formatDoc(store);
       }
     }
 
@@ -104,9 +129,15 @@ const getPaymentById = async (req, res) => {
       if (!order || order.getData().storeId !== req.user.id) {
         return errorResponse(res, 403, "Not authorized to view this payment");
       }
+     
     }
 
-    return successResponse(res, 200, "Payment fetched successfully", paymentData);
+    return successResponse(
+      res,
+      200,
+      "Payment fetched successfully",
+      paymentData
+    );
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -120,11 +151,16 @@ const getAllPayments = async (req, res) => {
     }
 
     const payments = await Payment.findAll();
-    const paymentsData = formatDocs(payments).sort((a, b) => 
-      new Date(b.createdAt) - new Date(a.createdAt)
+    const paymentsData = formatDocs(payments).sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
 
-    return successResponse(res, 200, "Payments fetched successfully", paymentsData);
+    return successResponse(
+      res,
+      200,
+      "Payments fetched successfully",
+      paymentsData
+    );
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -165,7 +201,80 @@ const uploadPaymentReceipt = async (req, res) => {
     });
 
     const updated = await Payment.findOne({ id: paymentId });
-    return successResponse(res, 200, "Payment receipt uploaded successfully", formatDoc(updated));
+    return successResponse(
+      res,
+      200,
+      "Payment receipt uploaded successfully",
+      formatDoc(updated)
+    );
+  } catch (err) {
+    return errorResponse(res, 500, "Server error", err.message);
+  }
+};
+// GET PAYMENT RECEIPT (STORE + ADMIN)
+const getPaymentReceipt = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const payment = await Payment.findOne({ id: paymentId });
+    if (!payment) {
+      return errorResponse(res, 404, "Payment not found");
+    }
+
+    const paymentData = payment.getData();
+
+    // Get order details
+    const order = await Order.findOne({ id: paymentData.orderId });
+    if (!order) {
+      return errorResponse(res, 404, "Order not found");
+    }
+
+    const orderData = order.getData();
+
+    // If store: ensure this payment belongs to their order
+    if (req.role === "store") {
+      if (orderData.storeId !== req.user.id) {
+        return errorResponse(res, 403, "Not authorized to view this receipt");
+      }
+    }
+
+    // Populate product details
+    const Product = require("../../models/firestore").Product;
+    const items = [];
+
+    for (const item of orderData.products) {
+      const product = await Product.findOne({ id: item.productId });
+      const productData = product ? product.getData() : null;
+
+      items.push({
+        name: productData?.name || "Unknown Product",
+        quantity: item.qty,
+        length: productData?.dimensions?.length || "N/A",
+        width: productData?.dimensions?.width || "N/A",
+        height: productData?.dimensions?.height || "N/A",
+        price: item.price,
+        total: item.price * item.qty,
+      });
+    }
+
+    // Data needed by frontend
+    const receiptData = {
+      receiptNumber: paymentData.receiptNumber || `RCT-${paymentId}`,
+      transactionId: paymentData.transactionId,
+      orderDate: orderData.createdAt,
+      shippingDate: orderData.shippedAt,
+      paymentDate: paymentData.paidAt || paymentData.createdAt,
+      verifiedDate: paymentData.verifiedAt || paymentData.updatedAt,
+      amount: paymentData.amount,
+      items: items,
+    };
+
+    return successResponse(
+      res,
+      200,
+      "Receipt fetched successfully",
+      receiptData
+    );
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -215,13 +324,17 @@ const submitTransactionId = async (req, res) => {
     await order.update({ paymentStatus: "submitted" });
 
     const updated = await Payment.findOne({ where: { orderId } });
-    return successResponse(res, 200, "Transaction ID submitted successfully", formatDoc(updated));
+    return successResponse(
+      res,
+      200,
+      "Transaction ID submitted successfully",
+      formatDoc(updated)
+    );
   } catch (err) {
     console.error("[SUBMIT TRANSACTION ERROR]:", err);
     return errorResponse(res, 500, "Server error", err.message);
   }
 };
-
 
 // VERIFY PAYMENT (ADMIN)
 const verifyPayment = async (req, res) => {
@@ -264,15 +377,15 @@ const verifyPayment = async (req, res) => {
     const order = await Order.findOne({ id: paymentData.orderId });
     if (order) {
       await order.update({
-        paymentStatus: verified ? "verified" : "failed"
+        paymentStatus: verified ? "verified" : "failed",
       });
     }
 
     const updated = await Payment.findOne({ id: paymentId });
     return successResponse(
-      res, 
-      200, 
-      verified ? "Payment verified successfully" : "Payment marked as failed", 
+      res,
+      200,
+      verified ? "Payment verified successfully" : "Payment marked as failed",
       formatDoc(updated)
     );
   } catch (err) {
@@ -292,19 +405,24 @@ const getStorePayments = async (req, res) => {
 
     // Get all orders for this store
     const orders = await Order.findAll({ where: { storeId } });
-    const orderIds = orders.map(order => order.getId());
+    const orderIds = orders.map((order) => order.getId());
 
     // Get payments for these orders
     const allPayments = await Payment.findAll();
-    const storePayments = allPayments.filter(payment => 
+    const storePayments = allPayments.filter((payment) =>
       orderIds.includes(payment.getData().orderId)
     );
 
-    const paymentsData = formatDocs(storePayments).sort((a, b) => 
-      new Date(b.createdAt) - new Date(a.createdAt)
+    const paymentsData = formatDocs(storePayments).sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
 
-    return successResponse(res, 200, "Store payments fetched successfully", paymentsData);
+    return successResponse(
+      res,
+      200,
+      "Store payments fetched successfully",
+      paymentsData
+    );
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -332,7 +450,12 @@ const updatePaymentStatus = async (req, res) => {
     await payment.update({ status });
 
     const updated = await Payment.findOne({ id: paymentId });
-    return successResponse(res, 200, "Payment status updated successfully", formatDoc(updated));
+    return successResponse(
+      res,
+      200,
+      "Payment status updated successfully",
+      formatDoc(updated)
+    );
   } catch (err) {
     return errorResponse(res, 500, "Server error", err.message);
   }
@@ -348,4 +471,5 @@ module.exports = {
   verifyPayment,
   getStorePayments,
   updatePaymentStatus,
+  getPaymentReceipt,
 };
