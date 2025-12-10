@@ -44,7 +44,7 @@ export const LandingFooter = ({ role, storeData }) => {
                 />
               )}
 
-              <h3 className="text-xl font-bold text-white">{storeName}</h3>
+              <h3 className="text-xl font-bold text-white">{footerHeading}</h3>
             </div>
             <p className="text-sm text-gray-400">
               {role === "admin"
@@ -55,7 +55,7 @@ export const LandingFooter = ({ role, storeData }) => {
 
           {/* Contact */}
           <div>
-            <h4 className="text-white font-semibold mb-4">{footerHeading}</h4>
+            <h4 className="text-white font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Mail size={16} className="text-blue-400 flex-shrink-0" />
