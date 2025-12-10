@@ -118,8 +118,10 @@ export const Stores = () => {
       },
       navbar: {
         logoImage: "",
+        navbarHeading: "",
       },
       footer: {
+        footerHeading: "",
         address: {
           street: "",
           city: "",
@@ -209,8 +211,9 @@ export const Stores = () => {
       companyId: store.companyId?.id || "",
       landingPage: store.landingPage || {
         hero: { heading: "", subheading: "", heroImage: "" },
-        navbar: { logoImage: "" },
+        navbar: { logoImage: "", navbarHeading: "" },
         footer: {
+          footerHeading: "",
           address: { street: "", city: "", state: "", zipCode: "", country: "" },
           phone: "",
           email: "",
@@ -262,8 +265,10 @@ export const Stores = () => {
         },
         navbar: {
           logoImage: "",
+          navbarHeading: "",
         },
         footer: {
+          footerHeading: "",
           address: {
             street: "",
             city: "",
@@ -812,6 +817,20 @@ export const Stores = () => {
                       <span>Uploading image...</span>
                     </div>
                   )}
+
+                  {/* Navbar Heading Input */}
+                  <Input
+                    label="Navbar Heading"
+                    value={formData.landingPage?.navbar?.navbarHeading || ""}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      landingPage: {
+                        ...formData.landingPage,
+                        navbar: { ...formData.landingPage?.navbar, navbarHeading: e.target.value }
+                      }
+                    })}
+                    placeholder="e.g., Welcome to Our Store"
+                  />
                 </div>
               )}
             </div>
@@ -878,6 +897,20 @@ export const Stores = () => {
                       />
                     </label>
                   </div>
+
+                  {/* Footer Heading Input */}
+                  <Input
+                    label="Footer Heading"
+                    value={formData.landingPage?.footer?.footerHeading || ""}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      landingPage: {
+                        ...formData.landingPage,
+                        footer: { ...formData.landingPage?.footer, footerHeading: e.target.value }
+                      }
+                    })}
+                    placeholder="e.g., Get in Touch"
+                  />
 
                   <Input
                     label="Street Address"

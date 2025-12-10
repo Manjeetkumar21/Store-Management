@@ -4,7 +4,7 @@ import { useAppSelector, useAppDispatch } from "@/redux/hooks"
 import { logout } from "@/redux/slices/authSlice"
 import toast from "react-hot-toast"
 
-export const LandingNavbar = ({ role, dashboardLink, logoImage }) => {
+export const LandingNavbar = ({ role, dashboardLink, logoImage, navbarHeading }) => {
     const navigate = useNavigate()
     const dispatch = useAppDispatch()
     const { user, token } = useAppSelector((state) => state.auth)
@@ -29,7 +29,9 @@ export const LandingNavbar = ({ role, dashboardLink, logoImage }) => {
 
                         )}
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900">{role === "admin" ? "TCPL Stores" : "Store Portal"}</h1>
+                            <h1 className="text-xl font-bold text-gray-900">
+                                {navbarHeading || (role === "admin" ? "TCPL Stores" : "Store Portal")}
+                            </h1>
                             <p className="text-xs text-gray-500 hidden sm:block">
                                 {role === "admin" ? "Admin" : "Store"}
                             </p>

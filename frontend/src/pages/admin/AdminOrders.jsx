@@ -183,7 +183,7 @@ export function AdminOrders() {
                                                     Order #{order.id.slice(-8).toUpperCase()}
                                                 </h3>
                                                 <p className="text-xs md:text-sm text-gray-600 mt-1">
-                                                    Store: {order.storeId?.name || "Unknown"}
+                                                    Store: {order.store?.name || "Unknown"}
                                                 </p>
                                                 <p className="text-xs md:text-sm text-gray-500">
                                                     {new Date(order.createdAt).toLocaleString()}

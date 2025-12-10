@@ -21,10 +21,12 @@ const Store = defineModel('stores', {
         heroImage: '/store_hero_illustration.png'
       },
       navbar: {
-        logoImage: ''
+        logoImage: '',
+        navbarHeading: ''
       },
       footer: {
         logoImage: '',
+        footerHeading: '',
         address: {
           street: '',
           city: '',

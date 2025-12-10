@@ -59,11 +59,17 @@ export const Orders = () => {
           <head>
             <title>Payment Receipt - ${receiptData.receiptNumber}</title>
             <style>
-              body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+              body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
               .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
               .row { display: flex; justify-content: space-between; margin: 10px 0; }
               .label { font-weight: bold; }
               .amount { font-size: 24px; color: #2563eb; font-weight: bold; }
+              .section { margin: 30px 0; }
+              .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+              th { background-color: #f3f4f6; font-weight: bold; }
+              .text-right { text-align: right; }
               @media print { button { display: none; } }
             </style>
           </head>
@@ -72,20 +78,59 @@ export const Orders = () => {
               <h1>Payment Receipt</h1>
               <p>Receipt Number: ${receiptData.receiptNumber}</p>
             </div>
-            <div class="row">
-              <span class="label">Transaction ID:</span>
-              <span>${receiptData.transactionId}</span>
+            
+            <div class="section">
+              <div class="section-title">Transaction Details</div>
+              <div class="row">
+                <span class="label">Transaction ID:</span>
+                <span>${receiptData.transactionId || 'N/A'}</span>
+              </div>
+              <div class="row">
+                <span class="label">Order Date:</span>
+                <span>${receiptData.orderDate ? new Date(receiptData.orderDate).toLocaleString() : 'N/A'}</span>
+              </div>
+              <div class="row">
+                <span class="label">Payment Date:</span>
+                <span>${receiptData.paymentDate ? new Date(receiptData.paymentDate).toLocaleString() : 'N/A'}</span>
+              </div>
+              <div class="row">
+                <span class="label">Verified Date:</span>
+                <span>${receiptData.verifiedDate ? new Date(receiptData.verifiedDate).toLocaleString() : 'N/A'}</span>
+              </div>
+              <div class="row">
+                <span class="label">Shipping Date:</span>
+                <span>${receiptData.shippingDate ? new Date(receiptData.shippingDate).toLocaleString() : 'Not Shipped Yet'}</span>
+              </div>
             </div>
-            <div class="row">
-              <span class="label">Payment Date:</span>
-              <span>${new Date(receiptData.paymentDate).toLocaleString()}</span>
+
+            <div class="section">
+              <div class="section-title">Order Items</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Length (cm)</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${receiptData.items?.map(item => `
+                    <tr>
+                      <td>${item.name}</td>
+                      <td>${item.quantity}</td>
+                      <td>${item.length}</td>
+                      <td class="text-right">₹${item.price}</td>
+                      <td class="text-right">₹${item.total}</td>
+                    </tr>
+                  `).join('') || '<tr><td colspan="5">No items found</td></tr>'}
+                </tbody>
+              </table>
             </div>
-            <div class="row">
-              <span class="label">Verified Date:</span>
-              <span>${new Date(receiptData.verifiedDate).toLocaleString()}</span>
-            </div>
+
             <div class="row" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
-              <span class="label">Amount Paid:</span>
+              <span class="label">Total Amount Paid:</span>
               <span class="amount">₹${receiptData.amount}</span>
             </div>
             <button onclick="window.print()" style="margin-top: 30px; padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer;">

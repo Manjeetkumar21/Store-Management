@@ -11,6 +11,7 @@ const {
   getAllPayments,
   getStorePayments,
   updatePaymentStatus,
+  getPaymentReceipt,
 } = require("../controllers/payment.controller");
 
 const router = Router();
@@ -25,6 +26,7 @@ router.post("/:paymentId/receipt", authorizeRoles("store"), uploadPaymentReceipt
 router.get("/my", authorizeRoles("store"), getStorePayments);
 
 // Admin routes
+router.get("/:paymentId/receipt", authorizeRoles("admin", "store"), getPaymentReceipt);
 router.post("/:orderId/initiate", authorizeRoles("admin"), initiatePayment);
 router.post("/:paymentId/verify", authorizeRoles("admin"), verifyPayment);
 router.patch("/:paymentId/status", authorizeRoles("admin"), updatePaymentStatus);
